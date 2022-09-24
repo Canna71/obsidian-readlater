@@ -6,16 +6,16 @@ import { createRoot, Root } from "react-dom/client";
 
 
 import { loadMathJax } from "obsidian";
-import { TemplateSettings } from "src/Settings";
-import { getTemplateSettings } from "src/main";
-export const TEMPLATE_VIEW = "Template-view";
+import { ReadlaterSettings } from "src/Settings";
+import { getReadlaterSettings } from "src/main";
+export const READLATER_VIEW = "Readlater-view";
 
-export const TemplateContext = React.createContext<any>({});
+export const ReadlaterContext = React.createContext<any>({});
 
 
 
-export class TemplateView extends ItemView {
-    settings: TemplateSettings;
+export class ReadlaterView extends ItemView {
+    settings: ReadlaterSettings;
     root: Root;
     state = {
 
@@ -25,8 +25,8 @@ export class TemplateView extends ItemView {
 
     constructor(leaf: WorkspaceLeaf) {
         super(leaf);
-        // this.settings = (this.app as any).plugins.plugins["obsidian-Template"].settings as TemplateSettings;
-        this.settings = getTemplateSettings();
+        // this.settings = (this.app as any).plugins.plugins["obsidian-Readlater"].settings as ReadlaterSettings;
+        this.settings = getReadlaterSettings();
         this.state = {
 
         };
@@ -34,11 +34,11 @@ export class TemplateView extends ItemView {
     }
 
     getViewType() {
-        return TEMPLATE_VIEW;
+        return READLATER_VIEW;
     }
 
     getDisplayText() {
-        return "Template";
+        return "Readlater";
     }
 
     override onResize(): void {
@@ -57,12 +57,12 @@ export class TemplateView extends ItemView {
 
         this.root.render(
             <React.StrictMode>
-                <TemplateContext.Provider value={{
+                <ReadlaterContext.Provider value={{
                     width: this.contentEl.innerWidth,
                     settings: this.settings
                 }}>
                    <div>TODO:</div>
-                </TemplateContext.Provider>
+                </ReadlaterContext.Provider>
             </React.StrictMode>
         );
     }
