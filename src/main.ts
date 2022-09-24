@@ -13,7 +13,7 @@ import {
     WorkspaceLeaf,
 } from "obsidian";
 import { ReadlaterSettingsTab } from "src/SettingTab";
-import { processFile } from "./Processor";
+import Processor from "./Processor";
 
 const sigma = `<path stroke="currentColor" fill="none" d="M78.6067 22.8905L78.6067 7.71171L17.8914 7.71171L48.2491 48.1886L17.8914 88.6654L78.6067 88.6654L78.6067 73.4866" opacity="1"  stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
 `;
@@ -60,7 +60,7 @@ export default class ReadlaterPlugin extends Plugin {
             checkCallback: (checking:boolean)=>{
                 const file = this.app.workspace.getActiveFile();
                 if(!checking){
-                    file && processFile(file);
+                    file && new Processor(this.app).processFile(file);
                 }
                 else return !!file;
                 
