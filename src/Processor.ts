@@ -1,10 +1,12 @@
-import { App, htmlToMarkdown, TFile } from "obsidian";
+import { getReadlaterSettings } from 'src/main';
+import { App, htmlToMarkdown, normalizePath, TFile } from "obsidian";
 
 import Server from "http-proxy";
 import { ClientRequest, IncomingMessage, ServerResponse } from "http";
 import { URL } from "url";
 // import {JSDOM} from "jsdom";
 import {DOMParser, parseHTML} from 'linkedom';
+import path from 'path';
 
 const PROXY_PORT = 54800;
 
@@ -27,8 +29,9 @@ export default class Processor {
     async processFile(file: TFile) {
         const metaData = app.metadataCache.getFileCache(file);
         const frontMatter = metaData?.frontmatter;
+        const attr = getReadlaterSettings().urlAttribute;
 
-        const syncUrl = frontMatter?.syncUrl;
+        const syncUrl = frontMatter?.[attr];
 
         if (syncUrl) {
             const [title, md] = await this.downloadAsMarkDown(syncUrl);
@@ -44,9 +47,15 @@ export default class Processor {
 
     async createFileFromURL(url: string){
         const [title, md] = await this.downloadAsMarkDown(url);
-        const content = `---\nsyncUrl: "${url}"\n---\n`+md;
+        const attr = getReadlaterSettings().urlAttribute;
+        const content = `---\n${attr}: "${url}"\n---\n`+md;
         const fileName = this.normalizeFileName(title)+".md";
-        const file = await this.app.vault.create(fileName,content);
+        let folder = getReadlaterSettings().readLaterFolder;
+        if(!folder){
+            folder = this.app.workspace.getActiveFile()?.path || "/";
+        }
+        const fullPath = normalizePath(path.join(folder, fileName));
+        const file = await this.app.vault.create(fullPath,content);
         const leaf = this.app.workspace.getLeaf(false);
         await leaf.openFile(file);
     }
@@ -57,7 +66,6 @@ export default class Processor {
     // https://www.npmjs.com/package/http-proxy#using-https
     async downloadAsMarkDown(syncUrl: string) {
         const url = new URL(syncUrl);
-        console.log(url.pathname, url.search);
 
         this.createProxy(url.origin);
 

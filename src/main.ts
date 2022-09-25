@@ -36,25 +36,8 @@ export default class ReadlaterPlugin extends Plugin {
 
         addIcon("sigma", sigma);
 
-        if (this.settings.addRibbonIcon) {
-            // This creates an icon in the left ribbon.
-            const ribbonIconEl = this.addRibbonIcon(
-                "sigma",
-                "Open Readlater",
-                (evt: MouseEvent) => {
-                    this.activateView();
-                }
-            );
-            // Perform additional things with the ribbon
-            ribbonIconEl.addClass("Readlater-ribbon-class");
-        }
-
-        this.addCommand({
-            id: "show-Readlater-view",
-            name: "Show Readlater Sidebar",
-            callback: () => this.activateView(),
-        }); 
-
+        
+       
         this.addCommand({
             id: "process-current",
             name: "Synch Current Page",
@@ -163,7 +146,6 @@ export default class ReadlaterPlugin extends Plugin {
     }
 
     async registerPostProcessor() {
-        console.log("registerPostProcessor");
         // await loadMathJax();
         // await finishRenderMath();
         // this.registerMarkdownPostProcessor(getPostPrcessor(this.settings));

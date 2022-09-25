@@ -1,5 +1,6 @@
 import ReadlaterPlugin from "src/main";
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
+import { enrollInPocket } from "./PocketProvider";
 
 
 export class ReadlaterSettingsTab extends PluginSettingTab {
@@ -18,15 +19,19 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
 		containerEl.createEl('h2', {text: 'Readlater Settings'});
 
         this.createToggle(containerEl, "Add Ribbon Icon",
-            "Adds an icon to the ribbon to launch scan",
+            "Adds an icon to the ribbon to add URL",
             "addRibbonIcon"
         );
 
-        this.createToggle(containerEl, "Show Readlater Sidebar",
-        "Opens Readlater sidebar at startup",
-        "showAtStartUp"
-    	);
-
+        new Setting(containerEl)
+        .setName("Pocket")
+        .addButton(button=>button
+            .setButtonText("Get Auth")
+            .onClick(vutton=>{
+                enrollInPocket();
+            })
+        )
+        
        
 	}
 
