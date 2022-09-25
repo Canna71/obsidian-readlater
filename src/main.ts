@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS, ReadlaterSettings } from "src/Settings";
-import { addIcon, MarkdownView } from "obsidian";
+import { addIcon, MarkdownView, ObsidianProtocolData } from "obsidian";
 
 // import { MathResult } from './Extensions/ResultMarkdownChild';
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -15,6 +15,8 @@ import {
 import { ReadlaterSettingsTab } from "src/SettingTab";
 import Processor from "./Processor";
 import { URL } from "url";
+import { threadId } from "worker_threads";
+import { authorize, POCKET_ACTION } from "./PocketProvider";
 
 const sigma = `<path stroke="currentColor" fill="none" d="M78.6067 22.8905L78.6067 7.71171L17.8914 7.71171L48.2491 48.1886L17.8914 88.6654L78.6067 88.6654L78.6067 73.4866" opacity="1"  stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
 `;
@@ -36,7 +38,7 @@ export default class ReadlaterPlugin extends Plugin {
 
         addIcon("sigma", sigma);
 
-        
+        this.registerObsidianProtocolHandler(POCKET_ACTION, this.onPocketCallback.bind(this))
        
         this.addCommand({
             id: "process-current",
@@ -153,5 +155,14 @@ export default class ReadlaterPlugin extends Plugin {
 
     async registerEditorExtensions() {
         // this.registerEditorExtension([resultField, ReadlaterConfigField]);
+    }
+
+    async onPocketCallback(data:ObsidianProtocolData){
+        if(data.action===POCKET_ACTION){
+            const auth = await authorize(data.code);
+            this.settings.pocket.access_token = auth.access_token;
+            this.settings.pocket.username = auth.username;
+            this.saveSettings();
+        }
     }
 }

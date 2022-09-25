@@ -22,11 +22,22 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
             "Adds an icon to the ribbon to add URL",
             "addRibbonIcon"
         );
+        const pocketCfg = this.plugin.settings.pocket;
+
+        containerEl.createEl('h3', {text: 'Pocket Integration'});
+
+        let desc = "Authorize the app to integrate with Pocket";
+
+        if(pocketCfg.username && pocketCfg.access_token){
+           desc = "Authenticated as " + pocketCfg.username;
+
+        }
 
         new Setting(containerEl)
         .setName("Pocket")
+        .setDesc(desc)
         .addButton(button=>button
-            .setButtonText("Get Auth")
+            .setButtonText("Authorize")
             .onClick(vutton=>{
                 enrollInPocket();
             })
