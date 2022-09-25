@@ -1,5 +1,5 @@
 import { getReadlaterSettings } from 'src/main';
-import { App, htmlToMarkdown, normalizePath, TFile } from "obsidian";
+import { App, htmlToMarkdown, normalizePath, requestUrl, TFile } from "obsidian";
 
 import Server from "http-proxy";
 import { ClientRequest, IncomingMessage, ServerResponse } from "http";
@@ -45,6 +45,7 @@ export default class Processor {
         }
     }
 
+
     async createFileFromURL(url: string){
         const [title, md] = await this.downloadAsMarkDown(url);
         const attr = getReadlaterSettings().urlAttribute;
@@ -67,6 +68,52 @@ export default class Processor {
     async downloadAsMarkDown(syncUrl: string) {
         const url = new URL(syncUrl);
 
+        // this.createProxy(url.origin);
+
+        let md = "";
+        let title = "";
+        try {
+            // const tmp = process.env.NODE_TLS_REJECT_UNAUTHORIZED
+            // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+            // const resp = await fetch(
+            //     `http://localhost:${this._port}/${url.pathname}${url.search}`,
+            //     {
+            //         method: "GET",
+            //         // mode: "no-cors",
+            //         headers: {
+            //             "Content-Type": "text/html",
+            //         },
+            //     }
+            // );
+            // process.env.NODE_TLS_REJECT_UNAUTHORIZED = tmp;
+
+            const resp = await requestUrl({
+                url: syncUrl,
+                method: "GET",
+                headers: {
+                    "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.50",
+                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                    "cookie": ""
+                }
+                
+            })
+
+            const html = resp.text;
+            let article;
+            [title, article] = this.extractData(html);
+            md = htmlToMarkdown(article);
+        } catch (error) {
+            console.warn(error);
+        } finally {
+            // this.closeProxy();
+        }
+        return [title, md];
+    }
+
+    async downloadAsMarkDownUsingProxy(syncUrl: string) {
+        const url = new URL(syncUrl);
+
         this.createProxy(url.origin);
 
         let md = "";
@@ -86,6 +133,9 @@ export default class Processor {
                 }
             );
             // process.env.NODE_TLS_REJECT_UNAUTHORIZED = tmp;
+
+            
+
             const html = await resp.text();
             let article;
             [title, article] = this.extractData(html);
@@ -150,7 +200,10 @@ export default class Processor {
                 proxyReq: ClientRequest,
                 req: IncomingMessage,
                 res: ServerResponse
-            ) => {}
+            ) => {
+
+                proxyReq.removeHeader("cookie")
+            }
         );
     }
 
@@ -187,4 +240,5 @@ const enableCors = (
         res.statusCode = 200;
         proxyRes.statusCode = 200;
     }
+
 };
