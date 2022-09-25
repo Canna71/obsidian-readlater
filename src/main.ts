@@ -14,6 +14,7 @@ import {
 } from "obsidian";
 import { ReadlaterSettingsTab } from "src/SettingTab";
 import Processor from "./Processor";
+import { URL } from "url";
 
 const sigma = `<path stroke="currentColor" fill="none" d="M78.6067 22.8905L78.6067 7.71171L17.8914 7.71171L48.2491 48.1886L17.8914 88.6654L78.6067 88.6654L78.6067 73.4866" opacity="1"  stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
 `;
@@ -63,6 +64,22 @@ export default class ReadlaterPlugin extends Plugin {
                     file && new Processor(this.app).processFile(file);
                 }
                 else return !!file;
+                
+            }
+        });
+
+        this.addCommand({
+            id: "process-clipboard",
+            name: "Synch Url from Clipboard",
+            callback: async ()=>{
+                const clip = await navigator.clipboard.readText();
+                try{
+                    const url = new URL(clip);
+                    new Processor(this.app).createFileFromURL(url.toString());
+                } catch(error) {
+                    console.warn(error);
+                }
+                
                 
             }
         });

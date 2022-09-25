@@ -3,12 +3,14 @@ import { App, htmlToMarkdown, TFile } from "obsidian";
 import Server from "http-proxy";
 import { ClientRequest, IncomingMessage, ServerResponse } from "http";
 import { URL } from "url";
+// import {JSDOM} from "jsdom";
+import {DOMParser, parseHTML} from 'linkedom';
 
 const PROXY_PORT = 54800;
 
 export default class Processor {
     app: App;
-
+    static fileNameRE = /[\\/:]/gm;
     // static _proxies: Map<Server,number> = new Map();
     static _ports: Map<number, boolean> = new Map();
     /**
@@ -16,6 +18,7 @@ export default class Processor {
      */
     constructor(app: App) {
         this.app = app;
+        
     }
 
     _proxy: Server | undefined;
@@ -28,14 +31,24 @@ export default class Processor {
         const syncUrl = frontMatter?.syncUrl;
 
         if (syncUrl) {
-            const md = await this.downloadAsMarkDown(syncUrl);
+            const [title, md] = await this.downloadAsMarkDown(syncUrl);
             const content: string = await this.app.vault.cachedRead(file);
             const newContent =
                 content.substring(0, frontMatter.position.end.offset) +
                 "\n" +
                 md;
             app.vault.modify(file, newContent);
+            app.vault.rename(file,title);
         }
+    }
+
+    async createFileFromURL(url: string){
+        const [title, md] = await this.downloadAsMarkDown(url);
+        const content = `---\nsyncUrl: "${url}"\n---\n`+md;
+        const fileName = this.normalizeFileName(title)+".md";
+        const file = await this.app.vault.create(fileName,content);
+        const leaf = this.app.workspace.getLeaf(false);
+        await leaf.openFile(file);
     }
 
     // https://pratikpc.medium.com/bypassing-cors-with-electron-ab7eaf331605
@@ -49,6 +62,7 @@ export default class Processor {
         this.createProxy(url.origin);
 
         let md = "";
+        let title = "";
         try {
             // const tmp = process.env.NODE_TLS_REJECT_UNAUTHORIZED
             // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -65,13 +79,26 @@ export default class Processor {
             );
             // process.env.NODE_TLS_REJECT_UNAUTHORIZED = tmp;
             const html = await resp.text();
-            md = htmlToMarkdown(html);
+            let article;
+            [title, article] = this.extractData(html);
+            md = htmlToMarkdown(article);
         } catch (error) {
             console.warn(error);
         } finally {
             this.closeProxy();
         }
-        return md;
+        return [title, md];
+    }
+
+    extractData(html: string){
+        const dom = parseHTML(html);
+        // const dom = new JSDOM(html);
+        const title = dom.window.document.title;
+        let article = dom.window.document.querySelector("article");
+        if(!article){
+            article = dom.window.document.body;
+        } 
+        return [title, article.outerHTML]
     }
 
     closeProxy() {
@@ -117,6 +144,11 @@ export default class Processor {
                 res: ServerResponse
             ) => {}
         );
+    }
+
+    private normalizeFileName(title: string){
+        const result = title.replace(Processor.fileNameRE, "");
+        return result;
     }
 }
 
