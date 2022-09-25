@@ -5,11 +5,11 @@ export interface ReadlaterSettings {
     urlAttribute: string;
     readLaterFolder: string;
     pocket: {
-        consumerKey: string;
+        
         access_token?: string;
         username?: string;
     }
-    
+    domainsForHeadless: string[];
 }   
 
 export const DEFAULT_SETTINGS: ReadlaterSettings = {
@@ -18,9 +18,11 @@ export const DEFAULT_SETTINGS: ReadlaterSettings = {
     urlAttribute: "url",
     readLaterFolder: "Read Later",
     pocket: {
-        consumerKey: "103949-5250a92d096442648cc99a6"
-        
-    }
+    },
+    domainsForHeadless: [
+        "medium.com",
+        "msn.com"
+    ]
 
 }
 

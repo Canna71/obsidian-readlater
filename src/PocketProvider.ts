@@ -5,6 +5,8 @@ const electron = require("electron");
 
 export const POCKET_ACTION = "readlater-pocket";
 
+const CONSUMER_KEY = "103949-5250a92d096442648cc99a6";
+
 export interface RequestResponse {
     code: string;
     state: string;
@@ -76,7 +78,7 @@ export async function authorize(
     };
 
     const bodyContent = JSON.stringify({
-        consumer_key: getReadlaterSettings().pocket.consumerKey,
+        consumer_key: CONSUMER_KEY,
         code: requestCode,
     });
 
@@ -102,7 +104,7 @@ export async function request(): Promise<RequestResponse> {
     };
 
     const bodyContent = JSON.stringify({
-        consumer_key: getReadlaterSettings().pocket.consumerKey,
+        consumer_key: CONSUMER_KEY,
         redirect_uri: "obsidian://readlater",
         state: "pocket",
     });
@@ -139,7 +141,7 @@ export async function getUnreadList() : Promise<ListResult> {
     };
 
     const bodyContent = JSON.stringify({
-        consumer_key: pocketCfg.consumerKey,
+        consumer_key: CONSUMER_KEY,
         access_token: pocketCfg.access_token,
     });
 

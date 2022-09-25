@@ -1,3 +1,4 @@
+import { BrowserView, BrowserWindow } from 'electron';
 import { getReadlaterSettings } from 'src/main';
 import { App, htmlToMarkdown, normalizePath, requestUrl, TFile } from "obsidian";
 
@@ -12,7 +13,9 @@ import path from 'path';
 const electron = require("electron");
 
 const PROXY_PORT = 54800;
-
+// if we have markdown less than this number of chars, we try with BrowserWindow
+const CONTENT_THRESHOLD=32;
+const WAIT_AFTER_LOAD = 2000;
 const TEST_URL = "https://dorianlazar.medium.com/scraping-medium-with-python-beautiful-soup-3314f898bbf5";
 
 export default class Processor {
@@ -30,18 +33,27 @@ export default class Processor {
 
     _proxy: Server | undefined;
     _port: number;
+    _win: BrowserWindow;
+
+    private get headlessBrowser() : BrowserWindow{
+        if(!this._win){
+            //@ts-ignore
+            this._win = new electron.remote.BrowserWindow({show: true}) as BrowserWindow;
+        }   
+        return this._win;
+    }
 
     async downloadAsMarkdownUsingBrowserWindow(syncUrl: string) {
-        const win = new electron.remote.BrowserWindow({show: true});
-        await win.loadURL(TEST_URL);
-        await new Promise(r => setTimeout(r, 2000));
-        const wc = win.webContents;
+        await this.headlessBrowser.loadURL(syncUrl);
+        await new Promise(r => setTimeout(r, WAIT_AFTER_LOAD));
+        const wc = this.headlessBrowser.webContents;
         const frame = wc.mainFrame;
+        const title = this.headlessBrowser.getTitle()
         const html = await frame.executeJavaScript("document.documentElement.outerHTML");
         console.log(html); 
-        const [_,article] = this.extractData(html);
+        const [_,article] = this.extractData(html as string);
         const md = htmlToMarkdown(article); 
-        return ["TODO:",md];
+        return [title,md];
     }
 
     async processFile(file: TFile) {
@@ -52,26 +64,27 @@ export default class Processor {
         const syncUrl = frontMatter?.[attr];
 
         if (syncUrl) {
-            const [title, md] = await this.downloadAsMarkdownUsingBrowserWindow(syncUrl);
+            const [title, md] = await this.downloadAsMarkDown(syncUrl);
             const content: string = await this.app.vault.cachedRead(file);
             const newContent =
                 content.substring(0, frontMatter.position.end.offset) +
                 "\n" +
                 md;
             app.vault.modify(file, newContent);
-            app.vault.rename(file,title);
+            
+            app.vault.rename(file,normalizePath(path.join(file.parent.path, this.normalizeFileName(title)+".md")));
         }
     }
-
-
-    async createFileFromURL(url: string){
+ 
+    // TODO: check if file with that Url exists
+    async createFileFromURL(url: string, unattended=false){
         const [title, md] = await this.downloadAsMarkDown(url);
         const attr = getReadlaterSettings().urlAttribute;
         const content = `---\n${attr}: "${url}"\n---\n`+md;
         const fileName = this.normalizeFileName(title)+".md";
         let folder = getReadlaterSettings().readLaterFolder;
         if(!folder){
-            folder = this.app.workspace.getActiveFile()?.path || "/";
+            folder = !unattended && this.app.workspace.getActiveFile()?.parent.path || "/";
         }
         const fullPath = normalizePath(path.join(folder, fileName));
         const file = await this.app.vault.create(fullPath,content);
@@ -79,11 +92,25 @@ export default class Processor {
         await leaf.openFile(file);
     }
 
+    async downloadAsMarkDown(urlString: string){
+        const url = new URL(urlString);
+        const match = getReadlaterSettings().domainsForHeadless.find(domain=>url.hostname.contains(domain));
+        if(match){
+            return this.downloadAsMarkdownUsingBrowserWindow(urlString);
+        } else {
+            const [title, md] = await this.downloadAsMarkDownUsingRequestUrl(urlString);
+            if(!md || md.length < CONTENT_THRESHOLD){
+                return this.downloadAsMarkdownUsingBrowserWindow(urlString);
+            }
+            return Promise.resolve([title, md]);
+        }
+    }        
+
     // https://pratikpc.medium.com/bypassing-cors-with-electron-ab7eaf331605
     // https://gist.github.com/jesperorb/6ca596217c8dfba237744966c2b5ab1e
     // https://dhanrajsp.me/blog/the-tale-of-bypassing-cors
     // https://www.npmjs.com/package/http-proxy#using-https
-    async downloadAsMarkDown(syncUrl: string) {
+    async downloadAsMarkDownUsingRequestUrl(syncUrl: string) {
         const url = new URL(syncUrl);
 
         // this.createProxy(url.origin);
@@ -91,21 +118,7 @@ export default class Processor {
         let md = "";
         let title = "";
         try {
-            // const tmp = process.env.NODE_TLS_REJECT_UNAUTHORIZED
-            // process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-            // const resp = await fetch(
-            //     `http://localhost:${this._port}/${url.pathname}${url.search}`,
-            //     {
-            //         method: "GET",
-            //         // mode: "no-cors",
-            //         headers: {
-            //             "Content-Type": "text/html",
-            //         },
-            //     }
-            // );
-            // process.env.NODE_TLS_REJECT_UNAUTHORIZED = tmp;
-
+            
             const resp = await requestUrl({
                 url: syncUrl,
                 method: "GET",
