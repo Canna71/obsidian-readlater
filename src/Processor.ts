@@ -8,7 +8,12 @@ import { URL } from "url";
 import {DOMParser, parseHTML} from 'linkedom';
 import path from 'path';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const electron = require("electron");
+
 const PROXY_PORT = 54800;
+
+const TEST_URL = "https://dorianlazar.medium.com/scraping-medium-with-python-beautiful-soup-3314f898bbf5";
 
 export default class Processor {
     app: App;
@@ -26,6 +31,19 @@ export default class Processor {
     _proxy: Server | undefined;
     _port: number;
 
+    async downloadAsMarkdownUsingBrowserWindow(syncUrl: string) {
+        const win = new electron.remote.BrowserWindow({show: true});
+        await win.loadURL(TEST_URL);
+        await new Promise(r => setTimeout(r, 2000));
+        const wc = win.webContents;
+        const frame = wc.mainFrame;
+        const html = await frame.executeJavaScript("document.documentElement.outerHTML");
+        console.log(html); 
+        const [_,article] = this.extractData(html);
+        const md = htmlToMarkdown(article); 
+        return ["TODO:",md];
+    }
+
     async processFile(file: TFile) {
         const metaData = app.metadataCache.getFileCache(file);
         const frontMatter = metaData?.frontmatter;
@@ -34,7 +52,7 @@ export default class Processor {
         const syncUrl = frontMatter?.[attr];
 
         if (syncUrl) {
-            const [title, md] = await this.downloadAsMarkDown(syncUrl);
+            const [title, md] = await this.downloadAsMarkdownUsingBrowserWindow(syncUrl);
             const content: string = await this.app.vault.cachedRead(file);
             const newContent =
                 content.substring(0, frontMatter.position.end.offset) +
