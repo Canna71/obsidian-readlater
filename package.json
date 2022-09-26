@@ -23,16 +23,17 @@
 		"@typescript-eslint/eslint-plugin": "5.29.0",
 		"@typescript-eslint/parser": "5.29.0",
 		"builtin-modules": "3.3.0",
+		"electron": "^18.3.5",
 		"esbuild": "0.14.47",
 		"esbuild-plugin-svgr": "^1.0.1",
 		"esbuild-sass-plugin": "^2.3.2",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
-		"typescript": "4.7.4",
-        "electron": "^18.3.5"
+		"typescript": "4.7.4"
 	},
 	"dependencies": {
 		"http-proxy": "^1.18.1",
+		"instapaper": "^1.1.0",
 		"linkedom": "^0.14.16",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0"
