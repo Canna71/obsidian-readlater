@@ -8,6 +8,10 @@ export interface ReadlaterSettings {
         
         access_token?: string;
         username?: string;
+    },
+    instapaper: {
+        token?: string,
+        secret?: string
     }
     domainsForHeadless: string[];
 }   
@@ -18,6 +22,9 @@ export const DEFAULT_SETTINGS: ReadlaterSettings = {
     urlAttribute: "url",
     readLaterFolder: "Read Later",
     pocket: {
+    },
+    instapaper: {
+
     },
     domainsForHeadless: [
         "medium.com",

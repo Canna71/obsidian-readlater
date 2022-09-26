@@ -1,18 +1,33 @@
+import * as React from "react";
 import ReadlaterPlugin from "src/main";
 import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
 import { enrollInPocket } from "./PocketProvider";
-
-
+import { createRoot, Root } from "react-dom/client";
+import { ReadlaterContext } from "Views/ReadlaterView";
+import { SettingControl, SettingsInfo } from "./SettingItemInfo";
+import Select from 'react-select'
+import { getFolders } from "./utils";
+// https://react-select.com/styles
 export class ReadlaterSettingsTab extends PluginSettingTab {
 	plugin: ReadlaterPlugin;
+    root: Root;
 
 	constructor(app: App, plugin: ReadlaterPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
+        console.log("Readlater Setings constructor");
+		const {containerEl} = this;
+
+        this.root = createRoot(containerEl);
+        this.onAuthorizePocket = this.onAuthorizePocket.bind(this);
 	}
 
 	display(): void {
 		const {containerEl} = this;
+        console.log("Readlater Setings display");
+
+        const folders = getFolders(this.app);
+        const options = folders.map(f=>({value: f, label:f}));
 
 		containerEl.empty();
 
@@ -32,16 +47,23 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
            desc = "Authenticated as " + pocketCfg.username;
 
         }
+        const pocketEl = new Setting(containerEl).settingEl;
+        createRoot(pocketEl).render(
+            <React.StrictMode>
+                <ReadlaterContext.Provider value={{}}>
+                    
+                <SettingsInfo description={desc} name={""} />
+                   <SettingControl>
+                        <button onClick={this.onAuthorizePocket}>Authorize</button>
+                        <Select options={options} />
 
-        new Setting(containerEl)
-        .setName("Pocket")
-        .setDesc(desc)
-        .addButton(button=>button
-            .setButtonText("Authorize")
-            .onClick(vutton=>{
-                enrollInPocket();
-            })
-        )
+                   </SettingControl>
+
+                </ReadlaterContext.Provider>
+            </React.StrictMode>
+        );
+
+       
         
        
 	}
@@ -59,4 +81,8 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
 				})
 			);
 	}
+
+    private onAuthorizePocket(){
+        enrollInPocket();
+    }
 }

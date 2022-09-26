@@ -10,8 +10,8 @@ const CONSUMER_SECRET = "";
 
 export async function loginUser(username: string, password: string) {
     const client = Instapaper(CONSUMER_KEY, CONSUMER_SECRET);
-    const {toke, secret} =  await client.setUserCredentials(username, password).authenticate();
-    return {toke, secret};
+    const {token, secret} =  await client.setUserCredentials(username, password).authenticate();
+    return {token, secret};
 }
 
 export function authorize() {
