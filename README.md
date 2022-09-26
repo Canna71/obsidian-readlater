@@ -1,5 +1,3 @@
-TODO:
-
 Example bookmarklet
 
     window.open(`obsidian://readlater-add?url=${document.URL}`);    
