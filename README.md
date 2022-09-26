@@ -2,4 +2,6 @@
 
 W.I.P.
 
-Example bookmarklet available [here](https://canna71.github.io/obsidian-readlater/)
+Example bookmarklet 
+
+<a href="window.open(`obsidian://readlater-add?url=${document.URL}`);">Add to obsidian</a>
