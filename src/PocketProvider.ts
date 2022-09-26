@@ -1,9 +1,13 @@
 import { requestUrl } from "obsidian";
 import { getReadlaterSettings } from "src/main";
+
+// DOCS: https://getpocket.com/developer/docs/authentication
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const electron = require("electron");
 
 export const POCKET_ACTION = "readlater-pocket";
+
 
 const CONSUMER_KEY = "103949-5250a92d096442648cc99a6";
 

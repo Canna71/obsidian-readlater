@@ -17,10 +17,11 @@ import Processor from "./Processor";
 import { URL } from "url";
 import { threadId } from "worker_threads";
 import { authorize, getUnreadList, POCKET_ACTION } from "./PocketProvider";
+import { runInThisContext } from "vm";
 
 const sigma = `<path stroke="currentColor" fill="none" d="M78.6067 22.8905L78.6067 7.71171L17.8914 7.71171L48.2491 48.1886L17.8914 88.6654L78.6067 88.6654L78.6067 73.4866" opacity="1"  stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
 `;
-
+export const ADD_URL_ACTION = "readlater-add";
 // Remember to rename these classes and interfaces!
 
 let gSettings: ReadlaterSettings;
@@ -38,58 +39,31 @@ export default class ReadlaterPlugin extends Plugin {
 
         addIcon("sigma", sigma);
 
-        this.registerObsidianProtocolHandler(POCKET_ACTION, this.onPocketCallback.bind(this))
-       
-        this.addCommand({
-            id: "process-current",
-            name: "Synch Current Page",
-            checkCallback: (checking:boolean)=>{
-                const file = this.app.workspace.getActiveFile();
-                if(!checking){
-                    file && new Processor(this.app).processFile(file);
-                }
-                else return !!file;
-                
-            }
-        });
+        this.registerProtocolHandlers();
 
-        this.addCommand({
-            id: "process-clipboard",
-            name: "Synch Url from Clipboard",
-            callback: async ()=>{
-                const clip = await navigator.clipboard.readText();
-                try{
-                    const url = new URL(clip);
-                    new Processor(this.app).createFileFromURL(url.toString());
-                } catch(error) {
-                    console.warn(error);
-                }
-                
-                
-            }
-        });
-
-        this.addCommand({
-            id: "synch-pocket",
-            name: "Synch Pocket Unread List",
-            checkCallback: (checking:boolean)=>{
-                if(checking){
-                    return !!this.settings.pocket.access_token;
-                }
-                getUnreadList();
-            }
-        });
-
-        this.app.workspace.onLayoutReady(() => {
-            if (this.settings.showAtStartup) {
-                this.activateView();
-            }
-        });
+        this.registerCommands();
 
         this.registerCodeBlock();
         this.registerPostProcessor();
         this.registerEditorExtensions();
 
+        this.registerEvents();
+
+        this.addSettingTab(new ReadlaterSettingsTab(this.app, this));
+    }
+
+    private registerProtocolHandlers() {
+        this.registerObsidianProtocolHandler(
+            POCKET_ACTION,
+            this.onPocketCallback.bind(this)
+        );
+        this.registerObsidianProtocolHandler(
+            ADD_URL_ACTION,
+            this.onAddUrlAction.bind(this)
+        )
+    }
+
+    private registerEvents() {
         this.app.workspace.on(
             "active-leaf-change",
             (leaf: WorkspaceLeaf | null) => {
@@ -110,7 +84,49 @@ export default class ReadlaterPlugin extends Plugin {
             this
         );
 
-        this.addSettingTab(new ReadlaterSettingsTab(this.app, this));
+        this.app.workspace.onLayoutReady(() => {
+            if (this.settings.showAtStartup) {
+                this.activateView();
+            }
+        });
+    }
+
+    private registerCommands() {
+        this.addCommand({
+            id: "process-current",
+            name: "Synch Current Page",
+            checkCallback: (checking: boolean) => {
+                const file = this.app.workspace.getActiveFile();
+                if (!checking) {
+                    file && new Processor(this.app).processFile(file);
+                } else return !!file;
+            },
+        });
+
+        this.addCommand({
+            id: "process-clipboard",
+            name: "Synch Url from Clipboard",
+            callback: async () => {
+                const clip = await navigator.clipboard.readText();
+                try {
+                    const url = new URL(clip);
+                    new Processor(this.app).createFileFromURL(url.toString());
+                } catch (error) {
+                    console.warn(error);
+                }
+            },
+        });
+
+        this.addCommand({
+            id: "synch-pocket",
+            name: "Synch Pocket Unread List",
+            checkCallback: (checking: boolean) => {
+                if (checking) {
+                    return !!this.settings.pocket.access_token;
+                }
+                getUnreadList();
+            },
+        });
     }
 
     onunload() {
@@ -168,12 +184,19 @@ export default class ReadlaterPlugin extends Plugin {
         // this.registerEditorExtension([resultField, ReadlaterConfigField]);
     }
 
-    async onPocketCallback(data:ObsidianProtocolData){
-        if(data.action===POCKET_ACTION){
+    async onPocketCallback(data: ObsidianProtocolData) {
+        if (data.action === POCKET_ACTION) {
             const auth = await authorize(data.code);
             this.settings.pocket.access_token = auth.access_token;
             this.settings.pocket.username = auth.username;
             this.saveSettings();
+        }
+    }
+
+    async onAddUrlAction(data: ObsidianProtocolData) {
+        if (data.action === ADD_URL_ACTION) {
+            const url = data.url;
+            new Processor(this.app).createFileFromURL(url.toString());
         }
     }
 }
