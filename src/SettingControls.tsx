@@ -38,3 +38,22 @@ export const SettingControl = ({ children }: React.PropsWithChildren) => {
         <div className="setting-item-control">{children}</div>
     )
 }
+
+export const SettingItem = ({ children }: React.PropsWithChildren) => {
+    return (
+        <div className="setting-item">{children}</div>
+    )
+}
+
+export const Toggle = ({ checked, onChange }: {checked:  boolean, onChange:() => void}) => {
+
+    
+    const classes = ["checkbox-container"];
+    if(checked) classes.push("is-enabled");
+    return (
+        <div className={classes.join(" ")} onClick={onChange}>
+
+            <input type="checkbox" defaultChecked={checked}  tabIndex={0} />
+        </div>
+    )
+}
