@@ -8,6 +8,7 @@ import { SettingControl, SettingItem, SettingsInfo, Toggle } from "./SettingCont
 import { getFolders } from "./utils";
 import { SelectObs } from "Views/Select";
 import { ReadlaterSettings } from "./Settings";
+import { enrollInstapaper, loginUser } from "./InstapaperProvider";
 // https://react-select.com/styles
 export class ReadlaterSettingsTab extends PluginSettingTab {
     plugin: ReadlaterPlugin;
@@ -86,6 +87,8 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
     }
 
     private onAuthorizeInstapaper() {
+        
+        enrollInstapaper()
     }
 
     private onChange(){

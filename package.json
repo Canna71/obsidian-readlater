@@ -33,8 +33,8 @@
 	},
 	"dependencies": {
 		"http-proxy": "^1.18.1",
-		"instapaper": "^1.1.0",
 		"linkedom": "^0.14.16",
+		"oauth-1.0a": "^2.2.6",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-select": "^5.4.0"
