@@ -5,8 +5,8 @@ import { enrollInPocket } from "./PocketProvider";
 import { createRoot, Root } from "react-dom/client";
 import { ReadlaterContext } from "Views/ReadlaterView";
 import { SettingControl, SettingsInfo } from "./SettingControls";
-import Select from 'react-select'
 import { getFolders } from "./utils";
+import { SelectObs } from "Views/Select";
 // https://react-select.com/styles
 export class ReadlaterSettingsTab extends PluginSettingTab {
     plugin: ReadlaterPlugin;
@@ -48,74 +48,6 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
 
         }
 
-        const customStyles = {
-            option: (provided: any, state: any) => {
-
-                if(state.label === "/") console.log(state);
-                
-                return{
-                ...provided,
-                background: state.isFocused ? "var(--background-secondary)" : "var(--background-modifier-form-field)",
-                color: "var(--text-normal)",
-                "&:hover": {
-                    ...provided["&:hover"],
-                    backgroundColor: "var(--background-secondary)",
-
-                }
-            }},
-            valueContainer: (provided: any, state: any) => ({
-                ...provided,
-                color: "var(--text-normal)",
-            }),
-            menuList: (provided: any, state: any) => ({
-                ...provided,
-                border: "none",
-                backgroundColor: "var(--background-secondary-alt)",
-                color: "var(--text-normal)",
-            }),
-            input: (provided: any, state: any) => {
-
-
-                return { ...provided,
-                    color: "var(--text-normal)",
-                
-                };
-            },
-            singleValue: (provided: any, state: any) => {
-
-
-                return { ...provided,
-                    color: "var(--text-normal)",
-                
-                };
-            },
-            control: (provided: any, state: any) => {
-
-
-                return {
-                    ...provided,
-                    background: "var(--background-secondary-alt)",
-                    color: "var(--text-normal)",
-                    border: "1px solid var(--background-modifier-form-field)",
-                    boxShadow: "none",
-                    width: "300px",
-                    '&:hover': {
-                        ...provided["&:hover"],
-
-                        borderColor: 'var(--background-secondary-alt)'
-                    },
-                    '&:focused': {
-                        ...provided["&:focused"],
-
-                        borderColor: 'var(--background-secondary-alt)'
-                    }
-                }
-            },
-
-            // container: (provided: any)=>({
-
-            // })
-        }
 
         const pocketEl = new Setting(containerEl).settingEl;
         createRoot(pocketEl).render(
@@ -125,9 +57,9 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
                     <SettingsInfo description={desc} name={""} />
                     <SettingControl>
                         <button onClick={this.onAuthorizePocket}>Authorize</button>
-                        <Select
+                        <SelectObs
                             options={options}
-                            styles={customStyles}
+                            placeholder="Select a folder..."
                         />
 
                     </SettingControl>
