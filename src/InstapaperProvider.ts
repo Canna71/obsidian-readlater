@@ -5,6 +5,7 @@
 // https://github.com/Kong/mashape-oauth
 // https://github.com/robertklep/node-instapaper/blob/master/lib/index.js
 // https://www.npmjs.com/package/oauth-1.0a
+// https://gist.github.com/killercup/4205541
 
 import crypto from "crypto";
 import OAuth from "oauth-1.0a";
@@ -24,8 +25,6 @@ function fixedEncodeUriComponent(str: string) {
 
 export async function enrollInstapaper() {
     // TODO: ask username and password
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    // const {token, secret} = await loginUser("******", "******!");
     const oauth = new OAuth({
         consumer: {
             key: CONSUMER_KEY,
@@ -33,7 +32,7 @@ export async function enrollInstapaper() {
         },
         signature_method: "HMAC-SHA1",
         hash_function(base_string, key) {
-            console.log("base_string", base_string)
+            console.log({base_string})
             return crypto
                 .createHmac("sha1", key)
                 .update(base_string)
@@ -42,38 +41,35 @@ export async function enrollInstapaper() {
     });
     oauth.parameter_seperator=", ";
 
-    const req_access_token = {
+    const data = {
         url: `https://www.instapaper.com/api/1/oauth/access_token`,
         method: `POST`,
         data: {
-            // oauth_consumer_key: CONSUMER_KEY,
-            // oauth_nonce: oauth.getNonce(),
-            // oauth_signature_method: "HMAC-SHA1",
-            // oauth_timestamp: oauth.getTimeStamp(),
-            // oauth_version: "1.0",
             x_auth_username: "gcannata",
-            x_auth_password: "WhenIm64!",
+            x_auth_password: "****",
             x_auth_mode: "client_auth"
-        },
+        }
     };
-
-    const au = oauth.authorize(req_access_token);
-    oauth.toHeader(au)
+    // console.log(data)
+    const au = oauth.authorize({...data});
+    // oauth.toHeader(au);
     // const oauth_timestamp = au.oauth_timestamp;
-    console.log(au);
+    // console.log(au);
     // const authHeader = `OAuth oauth_consumer_key="${fixedEncodeUriComponent(au.oauth_consumer_key)}", oauth_signature_method="HMAC-SHA1", oauth_signature="${fixedEncodeUriComponent(au.oauth_signature)}", oauth_timestamp="${fixedEncodeUriComponent(au.oauth_timestamp.toString())}", oauth_nonce="${fixedEncodeUriComponent(au.oauth_nonce)}", oauth_version="1.0"`;
 
-
+    const form = new URLSearchParams(data.data).toString();
     const req = {
-        url: req_access_token.url,
-        method: req_access_token.method,
-        body: JSON.stringify(req_access_token.data),
+        url: data.url,//+`?x_auth_username=gcannata&x_auth_password=WhenIm64!&x_auth_mode=client_auth`,
+        method: data.method,
+        body: form,//JSON.stringify(req_access_token.data),
         headers: oauth.toHeader(au) as any,
+        contentType: "application/x-www-form-urlencoded",
+        throw: false
     };
     console.log(req);
-    console.log(req_access_token.data)
     try {
         const response = await requestUrl(req);
+      
         console.log(response);
     } catch (error) {
         console.warn(error);
