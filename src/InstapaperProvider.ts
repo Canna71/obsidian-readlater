@@ -10,70 +10,70 @@
 import crypto from "crypto";
 import OAuth from "oauth-1.0a";
 import { requestUrl } from "obsidian";
+import { URLSearchParams } from "url";
 
 const CONSUMER_KEY = "d9199656c5cf4e1ebd6021e9cc73eef4";
 const CONSUMER_SECRET = "90e4d04cf8a3476fa9bcc7a7efa704bf";
+const oauth = new OAuth({
+    consumer: {
+        key: CONSUMER_KEY,
+        secret: CONSUMER_SECRET,
+    },
+    signature_method: "HMAC-SHA1",
+    hash_function(base_string, key) {
+        console.log({base_string})
+        return crypto
+            .createHmac("sha1", key)
+            .update(base_string)
+            .digest("base64");
+    }
+    
+});
+oauth.parameter_seperator=", ";
 
-function fixedEncodeUriComponent(str: string) {
-    return encodeURIComponent(str)
-        .replace(/!/g, "%21")
-        .replace(/'/g, "%27")
-        .replace(/\(/g, "%28")
-        .replace(/\)/g, "%29")
-        .replace(/\*/g, "%2A");
+const sample = "oauth_token_secret=26d01c2595674eb0a282fe60c8a95712&oauth_token=d68c56d46f874eafa6d59d6a6b6cfd03";
+
+export type AccessTokenResponse = {
+    oauth_token: string,
+    oauth_token_secret: string
 }
 
-export async function enrollInstapaper() {
+export async function enrollInstapaper():Promise<AccessTokenResponse> {
     // TODO: ask username and password
-    const oauth = new OAuth({
-        consumer: {
-            key: CONSUMER_KEY,
-            secret: CONSUMER_SECRET,
-        },
-        signature_method: "HMAC-SHA1",
-        hash_function(base_string, key) {
-            console.log({base_string})
-            return crypto
-                .createHmac("sha1", key)
-                .update(base_string)
-                .digest("base64");
-        },
-    });
-    oauth.parameter_seperator=", ";
+
 
     const data = {
+        
         url: `https://www.instapaper.com/api/1/oauth/access_token`,
+        // url: `https://www.instapaper.com/api/1/account/verify_credentials`,
         method: `POST`,
         data: {
-            x_auth_username: "gcannata",
+            x_auth_username: "cippa.lippa@mail.com",
             x_auth_password: "****",
             x_auth_mode: "client_auth"
         }
     };
-    // console.log(data)
     const au = oauth.authorize({...data});
-    // oauth.toHeader(au);
-    // const oauth_timestamp = au.oauth_timestamp;
-    // console.log(au);
-    // const authHeader = `OAuth oauth_consumer_key="${fixedEncodeUriComponent(au.oauth_consumer_key)}", oauth_signature_method="HMAC-SHA1", oauth_signature="${fixedEncodeUriComponent(au.oauth_signature)}", oauth_timestamp="${fixedEncodeUriComponent(au.oauth_timestamp.toString())}", oauth_nonce="${fixedEncodeUriComponent(au.oauth_nonce)}", oauth_version="1.0"`;
 
-    const form = new URLSearchParams(data.data).toString();
     const req = {
-        url: data.url,//+`?x_auth_username=gcannata&x_auth_password=WhenIm64!&x_auth_mode=client_auth`,
+        url: data.url,
         method: data.method,
-        body: form,//JSON.stringify(req_access_token.data),
+        body: new URLSearchParams(data.data).toString(),
         headers: oauth.toHeader(au) as any,
         contentType: "application/x-www-form-urlencoded",
-        throw: false
+        throw: true
     };
     console.log(req);
-    try {
+    // try {
         const response = await requestUrl(req);
-      
-        console.log(response);
-    } catch (error) {
-        console.warn(error);
-    }
+        const usp = new URLSearchParams(response.text);
+        const oauth_token_secret = usp.get("oauth_token_secret") || "";
+        const oauth_token = usp.get("oauth_token") || "";
+        console.log({oauth_token, oauth_token_secret});
+        return {oauth_token, oauth_token_secret};
+    // } catch (error) {
+    //     console.warn(error);
+    // }
 }
 
 export async function loginUser(username: string, password: string) {
@@ -81,6 +81,33 @@ export async function loginUser(username: string, password: string) {
     // const {token, secret} =  await client.setUserCredentials(username, password).authenticate();
     // console.log({token, secret})
     // return {token, secret};
+}
+export type VerifyCredentialsResponse = {
+    subscription_is_active: string, 
+    type: string,
+    user_id: number,
+    username: string
+}
+
+export async function veriftCredentials(token:string, token_secret: string) : Promise<VerifyCredentialsResponse>{
+    const data = {
+        
+        url: `https://www.instapaper.com/api/1/account/verify_credentials`,
+        method: `POST`
+        
+    };
+    const au = oauth.authorize({...data},{key:token, secret:token_secret}); 
+    const req = {
+        url: data.url,
+        method: data.method,
+        // body: new URLSearchParams(data.data).toString(),
+        headers: oauth.toHeader(au) as any,
+        contentType: "application/x-www-form-urlencoded",
+        throw: false
+    };
+    const response = await requestUrl(req);
+    console.log(response);
+    return response.json[0];
 }
 
 export function authorize() {

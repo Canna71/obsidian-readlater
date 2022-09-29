@@ -14,7 +14,8 @@ export interface ReadlaterSettings {
         token?: string;
         secret?: string;
         markAsRead: boolean;
-
+        username?: string;
+        user_id?: number;
     }
     domainsForHeadless: string[];
 }   

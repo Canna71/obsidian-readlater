@@ -1,6 +1,6 @@
 import * as React from "react";
 import ReadlaterPlugin from "src/main";
-import { App, ButtonComponent, PluginSettingTab, Setting } from "obsidian";
+import { App, ButtonComponent, Modal, PluginSettingTab, Setting } from "obsidian";
 import { enrollInPocket } from "./PocketProvider";
 import { createRoot, Root } from "react-dom/client";
 import { ReadlaterContext } from "Views/ReadlaterView";
@@ -8,7 +8,8 @@ import { SettingControl, SettingItem, SettingsInfo, Toggle } from "./SettingCont
 import { getFolders } from "./utils";
 import { SelectObs } from "Views/Select";
 import { ReadlaterSettings } from "./Settings";
-import { enrollInstapaper, loginUser } from "./InstapaperProvider";
+import { enrollInstapaper, loginUser, veriftCredentials } from "./InstapaperProvider";
+import { threadId } from "worker_threads";
 // https://react-select.com/styles
 export class ReadlaterSettingsTab extends PluginSettingTab {
     plugin: ReadlaterPlugin;
@@ -86,9 +87,28 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
         enrollInPocket();
     }
 
-    private onAuthorizeInstapaper() {
-        
-        enrollInstapaper()
+    private async onAuthorizeInstapaper() {
+        try {
+            const {oauth_token, oauth_token_secret} = await enrollInstapaper();
+            this.plugin.settings.instapaper.token = oauth_token;
+            this.plugin.settings.instapaper.secret = oauth_token_secret;
+            this.plugin.saveSettings();
+            const verify = await veriftCredentials(
+                this.plugin.settings.instapaper.token,
+                this.plugin.settings.instapaper.secret
+                );
+            if(verify.username){
+                this.plugin.settings.instapaper.username = verify.username;
+                this.plugin.settings.instapaper.user_id = verify.user_id;
+                this.plugin.saveSettings();
+            }
+            this.display();
+
+        }catch(error){
+            // TODO: improve error reporting
+            new Modal(this.app).containerEl.appendText(error.message);
+        }
+
     }
 
     private onChange(){
@@ -161,8 +181,8 @@ const InstapaperSettings = ({ settings, onAuthorize, folders }: ProviderSettings
 
     let desc = "Authorize the app to integrate with Instapaper";
 
-    if (instaCfg.secret && instaCfg.token) {
-        desc = "Authenticated as " + "TODO";
+    if (instaCfg.username) {
+        desc = "Authenticated as " + instaCfg.username;
 
     }
 
