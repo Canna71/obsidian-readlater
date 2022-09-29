@@ -16,8 +16,10 @@ import { ReadlaterSettingsTab } from "src/SettingTab";
 import Processor from "./Processor";
 import { URL } from "url";
 import { threadId } from "worker_threads";
-import { authorize, getUnreadList, POCKET_ACTION } from "./PocketProvider";
+import { authorize, getUnreadList as getPocketUnread, POCKET_ACTION } from "./PocketProvider";
 import { runInThisContext } from "vm";
+import { CredentialsModal } from "./CredentialsModal";
+import { getUnreadArticles as getInstapaperUnread } from "./InstapaperProvider";
 
 const sigma = `<path stroke="currentColor" fill="none" d="M78.6067 22.8905L78.6067 7.71171L17.8914 7.71171L48.2491 48.1886L17.8914 88.6654L78.6067 88.6654L78.6067 73.4866" opacity="1"  stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
 `;
@@ -29,6 +31,12 @@ let gSettings: ReadlaterSettings;
 export function getReadlaterSettings() {
     return gSettings;
 }
+
+export type Credentials = {
+    username: string;
+    password: string;
+}
+
 export default class ReadlaterPlugin extends Plugin {
     settings: ReadlaterSettings;
 
@@ -124,7 +132,25 @@ export default class ReadlaterPlugin extends Plugin {
                 if (checking) {
                     return !!this.settings.pocket.access_token;
                 }
-                getUnreadList();
+                getPocketUnread();
+                // TODO:
+            },
+        });
+
+        this.addCommand({
+            id: "synch-instapaper",
+            name: "Synch Instapaper Unread List",
+            checkCallback: (checking: boolean) => {
+                if (checking) {
+                    return !!this.settings.instapaper.token
+                }
+                (async ()=>{
+                    const bookmarks = await getInstapaperUnread();
+                    console.log(bookmarks);
+                })();
+
+               
+                // TODO:
             },
         });
     }
@@ -198,5 +224,15 @@ export default class ReadlaterPlugin extends Plugin {
             const url = data.url;
             new Processor(this.app).createFileFromURL(url.toString());
         }
+    }
+
+     public async askCredentials():Promise<Credentials> {
+        return new Promise<Credentials>((resolve,reject)=>{
+            const modal = new CredentialsModal(this.app,(username:string, password:string)=>{
+                resolve({username,password});
+            });
+            modal.open();
+        });
+        
     }
 }
