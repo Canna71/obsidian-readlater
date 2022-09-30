@@ -21,9 +21,9 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
         const { containerEl } = this;
 
         this.root = createRoot(containerEl);
-        this.onAuthorizePocket = this.onAuthorizePocket.bind(this);
-        this.onAuthorizeInstapaper = this.onAuthorizeInstapaper.bind(this);
-        this.onChange = this.onChange.bind(this);
+        // this.onAuthorizePocket = this.onAuthorizePocket.bind(this);
+        // this.onAuthorizeInstapaper = this.onAuthorizeInstapaper.bind(this);
+        // this.onChange = this.onChange.bind(this);
     }
 
     display(): void {
@@ -40,25 +40,14 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
             "Adds an icon to the ribbon to add URL",
             "addRibbonIcon"
         );
-       
+
 
         // const pocketEl = new Setting(containerEl).settingEl;
         const pocketEl = containerEl.createDiv();
         createRoot(pocketEl).render(
             <React.StrictMode>
                 <ReadlaterContext.Provider value={{}}>
-                    <PocketSettings 
-                        settings={this.plugin.settings}
-                        folders={folders}
-                        onAuthorize={this.onAuthorizePocket}
-                        onChange={this.onChange}
-                    />
-                    <InstapaperSettings 
-                        settings={this.plugin.settings}
-                        folders={folders}
-                        onAuthorize={this.onAuthorizeInstapaper}
-                        onChange={this.onChange}
-                    />
+                    <SettingsComponent plugin={this.plugin} folders={folders} />
                 </ReadlaterContext.Provider>
             </React.StrictMode>
         );
@@ -82,36 +71,76 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
             );
     }
 
-    private onAuthorizePocket() {
-        enrollInPocket();
-    }
+    
 
     private async onAuthorizeInstapaper() {
         try {
             await enrollInstapaper(this.plugin);
             this.display();
 
-        }catch(error){
+        } catch (error) {
             // TODO: improve error reporting
             new Modal(this.app).containerEl.appendText(error.message);
         }
 
     }
 
-    private onChange(){
-        this.plugin.saveSettings();
-        this.display();
-    }
+
+}
+
+const SettingsComponent = ({ folders, plugin }: { 
+
+    plugin: ReadlaterPlugin
+    folders: {
+        value: string;
+        label: string;
+    }[]
+}) => {
+
+    const [settings, update] = React.useState({...plugin.settings});
+
+    const  onAuthorizePocket = React.useCallback(async ()=>{
+        await enrollInPocket();
+        // update(settings => ({...settings}));
+    },[])
+
+    const  onAuthorizeInstapaper = React.useCallback(async ()=>{
+        await enrollInstapaper(plugin);
+        update(settings => ({...settings}));
+    },[plugin]);
+
+    const  onChange = React.useCallback(()=>{
+        plugin.saveSettings();
+        // this.display();
+
+    },[]);
+
+    return (
+        <>
+            <PocketSettings
+                settings={settings}
+                folders={folders}
+                onAuthorize={onAuthorizePocket}
+                onChange={onChange}
+            />
+            <InstapaperSettings
+                settings={settings}
+                folders={folders}
+                onAuthorize={onAuthorizeInstapaper}
+                onChange={onChange}
+            />
+        </>
+    )
 }
 
 type ProviderSettingsProps = {
     settings: ReadlaterSettings,
-    onAuthorize: ()=>void,
+    onAuthorize: () => void,
     folders: {
         value: string;
         label: string;
     }[],
-    onChange: ()=>void
+    onChange: () => void
 }
 
 const PocketSettings = ({ settings, onAuthorize, folders, onChange }: ProviderSettingsProps) => {
@@ -148,10 +177,10 @@ const PocketSettings = ({ settings, onAuthorize, folders, onChange }: ProviderSe
             <SettingItem>
                 <SettingsInfo description="Articles will be marked as read upon download" name={""} />
                 <SettingControl>
-                    <Toggle 
+                    <Toggle
                         checked={!!pocketCfg.markAsRead}
-                        onChange={()=>{
-                            pocketCfg.markAsRead=!pocketCfg.markAsRead;
+                        onChange={() => {
+                            pocketCfg.markAsRead = !pocketCfg.markAsRead;
                             onChange();
                         }}
                     />
