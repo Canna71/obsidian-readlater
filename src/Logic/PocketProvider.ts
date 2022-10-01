@@ -1,3 +1,4 @@
+import { Bookmark } from './Processor';
 import { requestUrl } from "obsidian";
 import { getReadlaterSettings } from "src/main";
 
@@ -135,7 +136,7 @@ export function getAuthorizeUrl(requestToken: string, redirectUrl: string) {
     return `https://getpocket.com/auth/authorize?request_token=${requestToken}&redirect_uri=${redirectUrl}`;
 }
 
-export async function getUnreadList() : Promise<ListResult> {
+async function getUnreadList() : Promise<ListResult> {
     const pocketCfg = getReadlaterSettings().pocket;
 
     const headersList = {
@@ -159,4 +160,17 @@ export async function getUnreadList() : Promise<ListResult> {
     const data = response.json;
     console.log(data);
     return data;
+}
+
+export async function GetBookmarks() : Promise<Bookmark[]> {
+    const {list} = await getUnreadList();
+    const bookmarks = Object.keys(list).map(key=>{
+        const item = list[key];
+        return {
+            id: item.item_id,
+            url: item.resolved_url,
+            title: item.given_title
+        }
+    })
+    return bookmarks;
 }

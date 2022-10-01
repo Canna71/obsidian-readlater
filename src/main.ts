@@ -12,14 +12,14 @@ import {
     Plugin,
     WorkspaceLeaf,
 } from "obsidian";
-import { ReadlaterSettingsTab } from "src/SettingTab";
-import Processor from "./Processor";
+import { ReadlaterSettingsTab } from "src/Views/SettingTab";
+import Processor from "./Logic/Processor";
 import { URL } from "url";
 import { threadId } from "worker_threads";
-import { authorize, getUnreadList as getPocketUnread, POCKET_ACTION } from "./PocketProvider";
+import { authorize, GetBookmarks as getPocketBookmarks, POCKET_ACTION } from "./Logic/PocketProvider";
 import { runInThisContext } from "vm";
 import { CredentialsModal } from "./CredentialsModal";
-import { getUnreadArticles as getInstapaperUnread } from "./InstapaperProvider";
+import { getUnreadArticles as getInstapaperUnread } from "./Logic/InstapaperProvider";
 import { EventEmitter } from "events";
 // import { EventEmitter } from "stream";
 
@@ -136,8 +136,11 @@ export default class ReadlaterPlugin extends Plugin {
                 if (checking) {
                     return !!this.settings.pocket.access_token;
                 }
-                getPocketUnread();
-                // TODO:
+                (async ()=>{
+                    const bookmarks = await getPocketBookmarks();
+                    new Processor(this.app).processBookmarks(bookmarks, this.settings.pocket);
+                })();
+                
             },
         });
 

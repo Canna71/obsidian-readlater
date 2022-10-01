@@ -18,7 +18,15 @@ const CONTENT_THRESHOLD=32;
 const WAIT_AFTER_LOAD = 2000;
 const TEST_URL = "https://dorianlazar.medium.com/scraping-medium-with-python-beautiful-soup-3314f898bbf5";
 
+export type Bookmark = {
+    id: string;
+    title: string;
+    url: string;
+}
+
+
 export default class Processor {
+
     app: App;
     static fileNameRE = /[\\/:]/gm;
     // static _proxies: Map<Server,number> = new Map();
@@ -241,6 +249,18 @@ export default class Processor {
     private normalizeFileName(title: string){
         const result = title.replace(Processor.fileNameRE, "");
         return result;
+    }
+
+    processBookmarks(bookmarks: Bookmark[], settings: { markAsRead: boolean; folder?: string;}) {
+        // TODO:
+        // check which folder to check
+        // chechs what we already have
+        // download only new (?)
+        // use title as file name if provided, page title otherwise
+        // set metadata in the file:
+        // - readlater
+        // -     downladed when
+        // mark as read if specified
     }
 }
 
