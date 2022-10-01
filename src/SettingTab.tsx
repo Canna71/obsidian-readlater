@@ -97,54 +97,42 @@ const SettingsComponent = ({ folders, plugin }: {
     }[]
 }) => {
 
-    const [settings, update] = React.useState({...plugin.settings});
 
-    const  onAuthorizePocket = React.useCallback(async ()=>{
-        await enrollInPocket();
-        // update(settings => ({...settings}));
-    },[])
+    
 
-    const  onAuthorizeInstapaper = React.useCallback(async ()=>{
-        await enrollInstapaper(plugin);
-        update(settings => ({...settings}));
-    },[plugin]);
+   
 
-    const  onChange = React.useCallback(()=>{
-        plugin.saveSettings();
-        // this.display();
+    
 
-    },[]);
+    
 
     return (
         <>
             <PocketSettings
-                settings={settings}
+                plugin={plugin}
                 folders={folders}
-                onAuthorize={onAuthorizePocket}
-                onChange={onChange}
+                
             />
             <InstapaperSettings
-                settings={settings}
+                plugin={plugin}
                 folders={folders}
-                onAuthorize={onAuthorizeInstapaper}
-                onChange={onChange}
+                
             />
         </>
     )
 }
 
 type ProviderSettingsProps = {
-    settings: ReadlaterSettings,
-    onAuthorize: () => void,
+    plugin: ReadlaterPlugin,
     folders: {
         value: string;
         label: string;
-    }[],
-    onChange: () => void
+    }[]
 }
 
-const PocketSettings = ({ settings, onAuthorize, folders, onChange }: ProviderSettingsProps) => {
-    const pocketCfg = settings.pocket;
+const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
+    const pocketCfg = plugin.settings.pocket;
+    const [settings, update] = React.useState({...plugin.settings});
 
     let desc = "Authorize the app to integrate with Pocket";
 
@@ -153,13 +141,34 @@ const PocketSettings = ({ settings, onAuthorize, folders, onChange }: ProviderSe
 
     }
 
+    const onUpdate = React.useCallback(()=>{
+        update(settings => ({...settings}));
+
+    },[]);
+
+    const  onChange = React.useCallback(()=>{
+        plugin.saveSettings();
+        onUpdate();
+        
+    },[]);
+
+    const  onAuthorizePocket = React.useCallback(async ()=>{
+        plugin.event.on("settings-saved",()=>{
+            plugin.event.off("settings-saved", onUpdate);
+            onUpdate();
+        });
+        
+        await enrollInPocket();
+        
+    },[])
+
     return (
         <>
             <h3>Pocket Integration</h3>
             <SettingItem>
                 <SettingsInfo description={desc} name={""} />
                 <SettingControl>
-                    <button onClick={onAuthorize}>Authorize</button>
+                    <button onClick={onAuthorizePocket}>Authorize</button>
 
 
                 </SettingControl>
@@ -192,23 +201,38 @@ const PocketSettings = ({ settings, onAuthorize, folders, onChange }: ProviderSe
 }
 
 
-const InstapaperSettings = ({ settings, onAuthorize, folders }: ProviderSettingsProps) => {
-    const instaCfg = settings.instapaper;
+const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) => {
+    const instaCfg = plugin.settings.instapaper;
+    const [settings, update] = React.useState({...plugin.settings});
+    
 
     let desc = "Authorize the app to integrate with Instapaper";
 
     if (instaCfg.username) {
         desc = "Authenticated as " + instaCfg.username;
-
     }
+    const [status, setStatus] = React.useState("");
+    const  onAuthorizeInstapaper = React.useCallback(async ()=>{
+        try {
+            await enrollInstapaper(plugin);
+            setStatus("")
+            update(settings => ({...settings}));
+        } catch(ex){
+            console.warn(ex);
+            setStatus("Login Failed")
+        }
+
+    },[plugin]);
 
     return (
         <>
             <h3>InstaPaper Integration</h3>
             <SettingItem>
                 <SettingsInfo description={desc} name={""} />
+                {status && <SettingsInfo description={status} name={""} />}
+
                 <SettingControl>
-                    <button onClick={onAuthorize}>Login</button>
+                    <button onClick={onAuthorizeInstapaper}>Login</button>
 
 
                 </SettingControl>

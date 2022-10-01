@@ -34,6 +34,7 @@ const sample =
     "oauth_token_secret=26d01c2595674eb0a282fe60c8a95712&oauth_token=d68c56d46f874eafa6d59d6a6b6cfd03";
 
 export async function enroll(plugin: ReadlaterPlugin) {
+    
     const { oauth_token, oauth_token_secret } = await getAccessToken(plugin);
     plugin.settings.instapaper.token = oauth_token;
     plugin.settings.instapaper.secret = oauth_token_secret;

@@ -20,6 +20,8 @@ import { authorize, getUnreadList as getPocketUnread, POCKET_ACTION } from "./Po
 import { runInThisContext } from "vm";
 import { CredentialsModal } from "./CredentialsModal";
 import { getUnreadArticles as getInstapaperUnread } from "./InstapaperProvider";
+import { EventEmitter } from "events";
+// import { EventEmitter } from "stream";
 
 const sigma = `<path stroke="currentColor" fill="none" d="M78.6067 22.8905L78.6067 7.71171L17.8914 7.71171L48.2491 48.1886L17.8914 88.6654L78.6067 88.6654L78.6067 73.4866" opacity="1"  stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
 `;
@@ -39,6 +41,8 @@ export type Credentials = {
 
 export default class ReadlaterPlugin extends Plugin {
     settings: ReadlaterSettings;
+
+    event = new EventEmitter();
 
     async onload() {
         await this.loadSettings();
@@ -170,6 +174,7 @@ export default class ReadlaterPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+        this.event.emit("settings-saved");
     }
 
     async activateView() {
