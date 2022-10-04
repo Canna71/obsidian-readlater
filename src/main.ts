@@ -153,9 +153,9 @@ export default class ReadlaterPlugin extends Plugin {
                 }
                 (async ()=>{
                     const bookmarks = await getInstapaperUnread();
-                    console.log(bookmarks);
-                })();
+                    new Processor(this.app).processBookmarks(bookmarks, this.settings.instapaper);
 
+                })();
                
                 // TODO:
             },

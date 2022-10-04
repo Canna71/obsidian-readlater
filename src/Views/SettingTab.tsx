@@ -3,7 +3,7 @@ import ReadlaterPlugin from "src/main";
 import { App, ButtonComponent, Modal, PluginSettingTab, Setting } from "obsidian";
 import { createRoot, Root } from "react-dom/client";
 import { ReadlaterContext } from "Views/ReadlaterView";
-import { getFolders } from "../utils";
+import { getFilesInFolder, getFolders } from "../utils";
 import { ReadlaterSettings } from "../Settings";
 import { enroll as enrollInstapaper } from "../Logic/InstapaperProvider";
 import { PocketSettings } from "./PocketSettings";
@@ -29,18 +29,11 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
         console.log("Readlater Setings display");
 
         const folders = getFolders(this.app).map(f => ({ value: f, label: f }));
+        
 
         containerEl.empty();
 
-        // containerEl.createEl('h2', { text: 'Readlater Settings' });
-
-        // this.createToggle(containerEl, "Add Ribbon Icon",
-        //     "Adds an icon to the ribbon to add URL",
-        //     "addRibbonIcon"
-        // );
-
-
-        // const pocketEl = new Setting(containerEl).settingEl;
+       
         const pocketEl = containerEl.createDiv();
         createRoot(pocketEl).render(
             <React.StrictMode>
@@ -50,28 +43,7 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
             </React.StrictMode>
         );
 
-
-
-
     }
-
-    // private createToggle(containerEl: HTMLElement, name: string, desc: string, prop: string) {
-    //     new Setting(containerEl)
-    //         .setName(name)
-    //         .setDesc(desc)
-    //         .addToggle(bool => bool
-    //             .setValue((this.plugin.settings as any)[prop] as boolean)
-    //             .onChange(async (value) => {
-    //                 (this.plugin.settings as any)[prop] = value;
-    //                 await this.plugin.saveSettings();
-    //                 this.display();
-    //             })
-    //         );
-    // }
-
-
-
-
 
 }
 

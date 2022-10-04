@@ -1,4 +1,4 @@
-import { App } from "obsidian";
+import { App, TFile } from "obsidian";
 
 export  function getFolders(app: App):string[]{
     //@ts-ignore
@@ -10,4 +10,12 @@ export  function getFolders(app: App):string[]{
         }
     }
     return folders;
+}
+
+export  function getFilesInFolder(app: App, path: string):TFile[]{
+    //@ts-ignore
+    return app.vault.getFiles().filter(
+        file => file.parent.path === path
+    );
+    
 }

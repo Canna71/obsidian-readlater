@@ -1,3 +1,4 @@
+import { Bookmark } from './Processor';
 import  ReadlaterPlugin, { getReadlaterSettings }  from "src/main";
 // https://oauth.net/core/1.0a/
 // https://www.instapaper.com/api
@@ -134,7 +135,7 @@ export type InstaBookmark = {
     url: string
 };
 
-export async function getUnreadArticles ()  : Promise<InstaBookmark[]>{
+export async function getUnreadArticles ()  : Promise<Bookmark[]>{
         const {token, secret} = getReadlaterSettings().instapaper;
         if(!token || !secret) throw new Error("Not authorized with Instapaper");
         const data = {
@@ -154,7 +155,14 @@ export async function getUnreadArticles ()  : Promise<InstaBookmark[]>{
             throw: false,
         };
         const response = await requestUrl(req);
-        return response.json.filter((item:any) => item.type === "bookmark");
+        const instaBookmarks:InstaBookmark[] =  response.json.filter((item:any) => item.type === "bookmark");
+
+        const bookmarks = instaBookmarks.map(ib=>({
+            id: String(ib.bookmark_id),
+            title: ib.title,
+            url: ib.url
+        }));
+        return bookmarks;
 }
 
 export async function archiveBookmark (bookmark_id:number)  : Promise<InstaBookmark>{
