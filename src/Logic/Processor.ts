@@ -116,9 +116,23 @@ export default class Processor {
                 "/";
         }
         const fullPath = normalizePath(path.join(folder, fileName));
-        const file = await this.app.vault.create(fullPath, content);
+        // test if file exists
+        const usablepath = await this.checkForUsablePath(fullPath);
+        const file = await this.app.vault.create(usablepath, content);
         const leaf = this.app.workspace.getLeaf(false);
         await leaf.openFile(file);
+    }
+
+    private async checkForUsablePath(fullPath: string) {
+        let exists = await this.app.vault.adapter.exists(fullPath);
+        let n = 1;
+        let usablepath = fullPath;
+        while (exists) {
+            usablepath = fullPath.replace(".md", ` (${n}).md`);
+            exists = await this.app.vault.adapter.exists(usablepath);
+            n++;
+        }
+        return usablepath;
     }
 
     async downloadAsMarkDown(urlString: string) {
