@@ -1,6 +1,6 @@
 import * as React from "react";
 import { SettingControl, SettingItem, SettingsInfo } from "./SettingControls";
-import { SelectObs } from "Views/Select";
+import { SelectObs } from "src/Views/Select";
 import { enroll as enrollInstapaper } from "../Logic/InstapaperProvider";
 import { ProviderSettingsProps } from "./SettingTab";
 
@@ -36,6 +36,21 @@ export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) =
         update(settings => ({ ...settings }));
     }, [plugin])
 
+    const onFolderChange = React.useCallback((newValue: any, actionMeta: any) => {
+        if (actionMeta.action === "select-option") {
+            plugin.settings.instapaper.folder = newValue.value;
+            plugin.saveSettings();
+            update(settings => ({ ...settings }));
+
+        } else if (actionMeta.action === "clear") {
+            plugin.settings.instapaper.folder = undefined;
+            plugin.saveSettings();
+            update(settings => ({ ...settings }));
+
+        }
+
+    }, [plugin, update]);
+
     return (
         <>
             <h3>InstaPaper Integration</h3>
@@ -59,7 +74,11 @@ export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) =
                 <SettingControl>
                     <SelectObs
                         options={folders}
-                        placeholder="Select a folder..." />
+                        value={plugin.settings.instapaper.folder || ""}
+                        onChange={onFolderChange}
+                        placeholder="Select a folder..."
+
+                    />
 
                 </SettingControl>
             </SettingItem>

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { enrollInPocket } from "../Logic/PocketProvider";
 import { SettingControl, SettingItem, SettingsInfo, Toggle } from "./SettingControls";
-import { SelectObs } from "Views/Select";
+import { SelectObs } from "src/Views/Select";
 import { ProviderSettingsProps } from "./SettingTab";
 
 export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
@@ -42,7 +42,20 @@ export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
         plugin.settings.pocket.username = undefined;
         plugin.saveSettings();
         onUpdate();
-    }, [plugin]);
+    }, [plugin, onUpdate]);
+
+    const onFolderChange = React.useCallback((newValue: any, actionMeta: any)=>{
+        if (actionMeta.action === "select-option") {
+            plugin.settings.pocket.folder = newValue.value;
+            plugin.saveSettings();
+            onUpdate();
+		} else if (actionMeta.action === "clear") {
+            plugin.settings.pocket.folder = undefined;
+            plugin.saveSettings();
+            onUpdate();
+		}
+
+    },[plugin, onUpdate]);
 
     return (
         <>
@@ -65,7 +78,10 @@ export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
                 <SettingControl>
                     <SelectObs
                         options={folders}
-                        placeholder="Select a folder..." />
+                        value={plugin.settings.pocket.folder || ""}
+                        placeholder="Select a folder..." 
+                        onChange={onFolderChange}
+                        />
 
                 </SettingControl>
             </SettingItem>

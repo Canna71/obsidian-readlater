@@ -5,7 +5,7 @@ export interface ReadlaterSettings {
     urlAttribute: string;
     readLaterFolder: string;
     pocket: {
-        
+        folder?: string;
         access_token?: string;
         username?: string;
         markAsRead: boolean;
@@ -16,6 +16,7 @@ export interface ReadlaterSettings {
         markAsRead: boolean;
         username?: string;
         user_id?: number;
+        folder?: string;
     }
     domainsForHeadless: string[];
 }   

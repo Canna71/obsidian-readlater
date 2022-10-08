@@ -3,7 +3,7 @@ import { addIcon, MarkdownView, ObsidianProtocolData } from "obsidian";
 
 // import { MathResult } from './Extensions/ResultMarkdownChild';
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ReadlaterView, READLATER_VIEW } from "../Views/ReadlaterView";
+import { ReadlaterView, READLATER_VIEW } from "./Views/ReadlaterView";
 import {
     App,
     finishRenderMath,

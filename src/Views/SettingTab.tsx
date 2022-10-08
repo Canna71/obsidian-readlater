@@ -2,7 +2,7 @@ import * as React from "react";
 import ReadlaterPlugin from "src/main";
 import { App, ButtonComponent, Modal, PluginSettingTab, Setting } from "obsidian";
 import { createRoot, Root } from "react-dom/client";
-import { ReadlaterContext } from "Views/ReadlaterView";
+import { ReadlaterContext } from "src/Views/ReadlaterView";
 import { getFilesInFolder, getFolders } from "../utils";
 import { ReadlaterSettings } from "../Settings";
 import { enroll as enrollInstapaper } from "../Logic/InstapaperProvider";
@@ -26,7 +26,6 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
 
     display(): void {
         const { containerEl } = this;
-        console.log("Readlater Setings display");
 
         const folders = getFolders(this.app).map(f => ({ value: f, label: f }));
         
