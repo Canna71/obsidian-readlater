@@ -11,7 +11,7 @@ const electron = require("electron");
 
 export const POCKET_ACTION = "readlater-pocket";
 
-const CONSUMER_KEY = "103949-5250a92d096442648cc99a6";
+const CONSUMER_KEY = "104115-e0742daf9a99a7d317d670f";
 
 export interface RequestResponse {
     code: string;
@@ -190,7 +190,7 @@ async function archive(itemId: string): Promise<ListResult> {
             {
                 action: "archive",
                 item_id: itemId,
-                time: moment().valueOf().toString(),
+                // time: moment().valueOf().toString(),
             },
         ],
     });
