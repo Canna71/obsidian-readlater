@@ -379,27 +379,8 @@ export default class Processor {
                 const synchPeriod = fm.readlater?.synch as SynchFrequency;
                 // no synch attribute, we do not synch it unattendedly
                 if (!synchPeriod) return false;
-                // we have a synch attribute but it was never synched, we process it
-                if (!synchTime) return true;
-                const now = moment();
-                const lastSynch = moment(synchTime);
-                switch (synchPeriod) {
-                    case SynchFrequency.Daily:
-                        return now.diff(lastSynch, "days") > 0;
-                    case SynchFrequency.Hourly:
-                        return now.diff(lastSynch, "hours") > 0;
-                    case SynchFrequency.Monthly:
-                        return now.diff(lastSynch, "month") > 0;
-                    case SynchFrequency.Weekly:
-                        return now.diff(lastSynch, "weeks") > 0;
-                    case SynchFrequency.Yearly:
-                        return now.diff(lastSynch, "years") > 0;
-                    case SynchFrequency.Manual:
-                        return false;
-                    default:
-                        console.warn("Invalid synch attribute " + synchPeriod);
-                        break;
-                }
+
+                return shouldProcess(synchPeriod, synchTime);
             }
         });
         // 1665310248866
@@ -437,3 +418,27 @@ const enableCors = (
         proxyRes.statusCode = 200;
     }
 };
+export function shouldProcess(synchPeriod: SynchFrequency, lastSynchTime?: number) {
+    // we have a synch attribute but it was never synched, we process it
+    if (!lastSynchTime) return true;
+    const now = moment();
+    const lastSynch = moment(lastSynchTime);
+    switch (synchPeriod) {
+        case SynchFrequency.Daily:
+            return now.diff(lastSynch, "days") > 0;
+        case SynchFrequency.Hourly:
+            return now.diff(lastSynch, "hours") > 0;
+        case SynchFrequency.Monthly:
+            return now.diff(lastSynch, "month") > 0;
+        case SynchFrequency.Weekly:
+            return now.diff(lastSynch, "weeks") > 0;
+        case SynchFrequency.Yearly:
+            return now.diff(lastSynch, "years") > 0;
+        case SynchFrequency.Manual:
+            return false;
+        default:
+            throw Error("Invalid synch attribute " + synchPeriod);
+           
+    }
+}
+

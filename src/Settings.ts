@@ -1,4 +1,5 @@
 
+
 export enum ReadlaterProvider {
     Pocket = "pocket",
     Instapaper = "instapaper"
@@ -16,6 +17,8 @@ export enum SynchFrequency {
 export interface ProviderSettings {
     folder?: string;
     markAsRead: boolean;
+    frequency?: SynchFrequency;
+    lastSynch?: number;
 }
 
 export interface ReadlaterSettings {
@@ -28,6 +31,8 @@ export interface ReadlaterSettings {
         access_token?: string;
         username?: string;
         markAsRead: boolean;
+        frequency: SynchFrequency;
+        lastSynch?: number;
     },
     instapaper: {
         token?: string;
@@ -36,6 +41,8 @@ export interface ReadlaterSettings {
         username?: string;
         user_id?: number;
         folder?: string;
+        frequency: SynchFrequency;
+        lastSynch?: number;
     }
     domainsForHeadless: string[];
     synchPeriodMS: number;
@@ -47,10 +54,12 @@ export const DEFAULT_SETTINGS: ReadlaterSettings = {
     urlAttribute: "url",
     readLaterFolder: "Read Later",
     pocket: {
-        markAsRead: false
+        markAsRead: false,
+        frequency: SynchFrequency.Manual
     },
     instapaper: {
-        markAsRead: false
+        markAsRead: false,
+        frequency: SynchFrequency.Manual
     },
     domainsForHeadless: [
         "medium.com",

@@ -1,4 +1,8 @@
-import { DEFAULT_SETTINGS, ReadlaterProvider, ReadlaterSettings } from "src/Settings";
+import {
+    DEFAULT_SETTINGS,
+    ReadlaterProvider,
+    ReadlaterSettings,
+} from "src/Settings";
 import { addIcon, MarkdownView, Notice, ObsidianProtocolData } from "obsidian";
 
 // import { MathResult } from './Extensions/ResultMarkdownChild';
@@ -13,14 +17,19 @@ import {
     WorkspaceLeaf,
 } from "obsidian";
 import { ReadlaterSettingsTab } from "src/Views/SettingTab";
-import Processor, { Bookmark } from "./Logic/Processor";
+import Processor, { Bookmark, shouldProcess } from "./Logic/Processor";
 import { URL } from "url";
 import { threadId } from "worker_threads";
-import { authorize, GetBookmarks as getPocketBookmarks, POCKET_ACTION } from "./Logic/PocketProvider";
+import {
+    authorize,
+    GetBookmarks as getPocketBookmarks,
+    POCKET_ACTION,
+} from "./Logic/PocketProvider";
 import { runInThisContext } from "vm";
 import { CredentialsModal } from "./CredentialsModal";
 import { getUnreadArticles as getInstapaperUnread } from "./Logic/InstapaperProvider";
 import { EventEmitter } from "events";
+import moment from "moment";
 // import { EventEmitter } from "stream";
 
 const sigma = `<path stroke="currentColor" fill="none" d="M78.6067 22.8905L78.6067 7.71171L17.8914 7.71171L48.2491 48.1886L17.8914 88.6654L78.6067 88.6654L78.6067 73.4866" opacity="1"  stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
@@ -37,7 +46,7 @@ export function getReadlaterSettings() {
 export type Credentials = {
     username: string;
     password: string;
-}
+};
 
 export default class ReadlaterPlugin extends Plugin {
     settings: ReadlaterSettings;
@@ -65,23 +74,61 @@ export default class ReadlaterPlugin extends Plugin {
 
         // register an interval for synching pages
         this.registerSynchInterval();
-
     }
 
     private registerSynchInterval() {
-        this.registerInterval(window.setInterval(
-            async () => {
-                if(!this.synching){
+        this.registerInterval(
+            window.setInterval(async () => {
+                if (!this.synching) {
                     this.synching = true;
-                    try{
-                        await new Processor(this.app).synchAll()
+                    try {
+                        await new Processor(this.app).synchAll();
+                        await this.synchAllProviders();
                     } finally {
                         this.synching = false;
                     }
-
+                }
+            }, this.settings.synchPeriodMS)
+        );
+    }
+    async synchAllProviders() {
+        // Pocket
+        if (this.settings.pocket.access_token) {
+            if (
+                shouldProcess(
+                    this.settings.pocket.frequency,
+                    this.settings.pocket.lastSynch
+                )
+            ) {
+                try {
+                    await this.synchProvider(
+                        getPocketBookmarks,
+                        ReadlaterProvider.Pocket
+                    );
+                    this.settings.pocket.lastSynch = moment().valueOf();
+                } catch (error) {
+                    console.warn(error);
                 }
             }
-        , this.settings.synchPeriodMS));
+        }
+        if (this.settings.instapaper.token) {
+            if (
+                shouldProcess(
+                    this.settings.instapaper.frequency,
+                    this.settings.instapaper.lastSynch
+                )
+            ) {
+                try {
+                    await this.synchProvider(
+                        getInstapaperUnread,
+                        ReadlaterProvider.Instapaper
+                    );
+                    this.settings.instapaper.lastSynch = moment().valueOf();
+                } catch (error) {
+                    console.warn(error);
+                }
+            }
+        }
     }
 
     private registerProtocolHandlers() {
@@ -92,7 +139,7 @@ export default class ReadlaterPlugin extends Plugin {
         this.registerObsidianProtocolHandler(
             ADD_URL_ACTION,
             this.onAddUrlAction.bind(this)
-        )
+        );
     }
 
     private registerEvents() {
@@ -156,10 +203,12 @@ export default class ReadlaterPlugin extends Plugin {
                 if (checking) {
                     return !!this.settings.pocket.access_token;
                 }
-                (async ()=>{
-                    await this.synchProvider(getPocketBookmarks, ReadlaterProvider.Pocket);
+                (async () => {
+                    await this.synchProvider(
+                        getPocketBookmarks,
+                        ReadlaterProvider.Pocket
+                    );
                 })();
-                
             },
         });
 
@@ -168,24 +217,31 @@ export default class ReadlaterPlugin extends Plugin {
             name: "Synch Instapaper Unread List",
             checkCallback: (checking: boolean) => {
                 if (checking) {
-                    return !!this.settings.instapaper.token
+                    return !!this.settings.instapaper.token;
                 }
-                (async ()=>{
-                    await this.synchProvider(getInstapaperUnread, ReadlaterProvider.Instapaper);
+                (async () => {
+                    await this.synchProvider(
+                        getInstapaperUnread,
+                        ReadlaterProvider.Instapaper
+                    );
                 })();
-               
+
                 // TODO:
             },
         });
-
-        
     }
 
-    private async synchProvider(fn: ()=>Promise<Bookmark[]>, provider:ReadlaterProvider) {
+    private async synchProvider(
+        fn: () => Promise<Bookmark[]>,
+        provider: ReadlaterProvider
+    ) {
         const bookmarks = await fn();
-        const res = await new Processor(this.app).processBookmarks(bookmarks, provider);
-        const message = res.processed ?
-            `Readlater synched ${res.provider}, downloaded ${res.processed} articles and saved into ${res.folder}`
+        const res = await new Processor(this.app).processBookmarks(
+            bookmarks,
+            provider
+        );
+        const message = res.processed
+            ? `Readlater synched ${res.provider}, downloaded ${res.processed} articles and saved into ${res.folder}`
             : `Readlater found no new article to save`;
         new Notice(message);
     }
@@ -262,13 +318,15 @@ export default class ReadlaterPlugin extends Plugin {
         }
     }
 
-     public async askCredentials():Promise<Credentials> {
-        return new Promise<Credentials>((resolve,reject)=>{
-            const modal = new CredentialsModal(this.app,(username:string, password:string)=>{
-                resolve({username,password});
-            });
+    public async askCredentials(): Promise<Credentials> {
+        return new Promise<Credentials>((resolve, reject) => {
+            const modal = new CredentialsModal(
+                this.app,
+                (username: string, password: string) => {
+                    resolve({ username, password });
+                }
+            );
             modal.open();
         });
-        
     }
 }

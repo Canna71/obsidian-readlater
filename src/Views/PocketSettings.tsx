@@ -3,6 +3,8 @@ import { enrollInPocket } from "../Logic/PocketProvider";
 import { SettingControl, SettingItem, SettingsInfo, Toggle } from "./SettingControls";
 import { SelectObs } from "src/Views/Select";
 import { ProviderSettingsProps } from "./SettingTab";
+import { FrequencySelect } from "./FrequencySelect";
+import { SynchFrequency } from "src/Settings";
 
 export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
     const pocketCfg = plugin.settings.pocket;
@@ -44,18 +46,29 @@ export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
         onUpdate();
     }, [plugin, onUpdate]);
 
-    const onFolderChange = React.useCallback((newValue: any, actionMeta: any)=>{
+    const onFolderChange = React.useCallback((newValue: any, actionMeta: any) => {
         if (actionMeta.action === "select-option") {
             plugin.settings.pocket.folder = newValue.value;
             plugin.saveSettings();
             onUpdate();
-		} else if (actionMeta.action === "clear") {
+        } else if (actionMeta.action === "clear") {
             plugin.settings.pocket.folder = undefined;
             plugin.saveSettings();
             onUpdate();
-		}
+        }
 
-    },[plugin, onUpdate]);
+    }, [plugin, onUpdate]);
+
+    const onChangeFrequency = React.useCallback(
+        (e:React.ChangeEvent<HTMLSelectElement>) => {
+            console.log(e.target.value);
+            plugin.settings.pocket.frequency = e.target.value as SynchFrequency;
+            plugin.saveSettings();
+            onUpdate();
+        },
+        [plugin, onUpdate]
+    )
+
 
     return (
         <>
@@ -74,14 +87,23 @@ export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
                 </SettingControl>
             </SettingItem>
             <SettingItem>
+                <SettingsInfo
+                    description="How often it should check for new bookmarks to save"
+                    name="Synch Frequency" />
+                <FrequencySelect
+                    value={pocketCfg.frequency}
+                    onChange={onChangeFrequency}
+                />
+            </SettingItem>
+            <SettingItem>
                 <SettingsInfo description="Articles will be saved in this folder, if provided" name={""} />
                 <SettingControl>
                     <SelectObs
                         options={folders}
                         value={plugin.settings.pocket.folder || ""}
-                        placeholder="Select a folder..." 
+                        placeholder="Select a folder..."
                         onChange={onFolderChange}
-                        />
+                    />
 
                 </SettingControl>
             </SettingItem>

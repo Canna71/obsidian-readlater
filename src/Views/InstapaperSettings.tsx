@@ -3,6 +3,8 @@ import { SettingControl, SettingItem, SettingsInfo } from "./SettingControls";
 import { SelectObs } from "src/Views/Select";
 import { enroll as enrollInstapaper } from "../Logic/InstapaperProvider";
 import { ProviderSettingsProps } from "./SettingTab";
+import { SynchFrequency } from "src/Settings";
+import { FrequencySelect } from "./FrequencySelect";
 
 export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) => {
     const instaCfg = plugin.settings.instapaper;
@@ -51,6 +53,17 @@ export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) =
 
     }, [plugin, update]);
 
+    const onChangeFrequency = React.useCallback(
+        (e:React.ChangeEvent<HTMLSelectElement>) => {
+            console.log(e.target.value);
+            plugin.settings.pocket.frequency = e.target.value as SynchFrequency;
+            plugin.saveSettings();
+            update(settings => ({ ...settings }));
+
+        },
+        [plugin, update]
+    )
+
     return (
         <>
             <h3>InstaPaper Integration</h3>
@@ -68,6 +81,15 @@ export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) =
 
 
                 </SettingControl>
+            </SettingItem>
+            <SettingItem>
+                <SettingsInfo
+                    description="How often it should check for new bookmarks to save"
+                    name="Synch Frequency" />
+                <FrequencySelect
+                    value={instaCfg.frequency}
+                    onChange={onChangeFrequency}
+                />
             </SettingItem>
             <SettingItem>
                 <SettingsInfo description="Articles will be saved in this folder, if provided" name={""} />
