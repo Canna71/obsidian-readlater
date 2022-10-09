@@ -246,6 +246,7 @@ export default class ReadlaterPlugin extends Plugin {
                 }
                 (async () => {
                     await p.archiveBookmark(id);
+                    new Notice(`Bookmark archived on ${provider}`);
                 })();
             },
         });
