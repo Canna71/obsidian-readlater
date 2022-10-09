@@ -183,7 +183,7 @@ export default class ReadlaterPlugin extends Plugin {
 
         this.addCommand({
             id: "process-clipboard",
-            name: "Synch Url from Clipboard",
+            name: "Save URL from Clipboard",
             callback: async () => {
                 const clip = await navigator.clipboard.readText();
                 try {
