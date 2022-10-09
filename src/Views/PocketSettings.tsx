@@ -72,7 +72,7 @@ export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
 
     return (
         <>
-            <h3><PocketIcon />&nbsp; Pocket Integration</h3>
+            <h3 className="readlater-setting-header"><PocketIcon className="readlater-provider-logo" />&nbsp; Pocket Integration</h3>
             <SettingItem>
                 <SettingsInfo description={desc} name={""} />
                 <SettingControl>

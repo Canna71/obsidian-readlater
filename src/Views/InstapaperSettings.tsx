@@ -66,7 +66,7 @@ export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) =
 
     return (
         <>
-            <h3><InstapaperLogo />&nbsp; InstaPaper Integration</h3>
+            <h3 className="readlater-setting-header"><InstapaperLogo className="readlater-provider-logo" />&nbsp; InstaPaper Integration</h3>
             <SettingItem>
                 <SettingsInfo description={desc} name={""} />
                 {status && <SettingsInfo description={status} name={""} />}
