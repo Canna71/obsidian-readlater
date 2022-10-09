@@ -187,4 +187,7 @@ export const instapaperProvider: BookmarksProvider = {
     archiveBookmark: async (id: string) => {
         await archiveBookmark(Number(id));
     },
+    isAuthorized: ()=>{
+        return !!getReadlaterSettings().instapaper.token;
+    }
 };

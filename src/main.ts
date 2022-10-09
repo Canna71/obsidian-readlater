@@ -1,6 +1,5 @@
 import {
     DEFAULT_SETTINGS,
-    ReadlaterProvider,
     ReadlaterSettings,
 } from "src/Settings";
 import { addIcon, MarkdownView, Notice, ObsidianProtocolData } from "obsidian";
@@ -30,7 +29,13 @@ import { CredentialsModal } from "./CredentialsModal";
 import { instapaperProvider } from "./Logic/InstapaperProvider";
 import { EventEmitter } from "events";
 import moment from "moment";
+import { BookmarksProvider, ReadlaterProvider } from "./Logic/Provider";
 // import { EventEmitter } from "stream";
+
+const providersMap = {
+    "pocket": pocketProvider,
+    "instapaper": instapaperProvider
+} 
 
 const sigma = `<path stroke="currentColor" fill="none" d="M78.6067 22.8905L78.6067 7.71171L17.8914 7.71171L48.2491 48.1886L17.8914 88.6654L78.6067 88.6654L78.6067 73.4866" opacity="1"  stroke-linecap="round" stroke-linejoin="round" stroke-width="6" />
 `;
@@ -106,6 +111,7 @@ export default class ReadlaterPlugin extends Plugin {
                         ReadlaterProvider.Pocket
                     );
                     this.settings.pocket.lastSynch = moment().valueOf();
+                    this.saveSettings();
                 } catch (error) {
                     console.warn(error);
                 }
@@ -124,6 +130,7 @@ export default class ReadlaterPlugin extends Plugin {
                         ReadlaterProvider.Instapaper
                     );
                     this.settings.instapaper.lastSynch = moment().valueOf();
+                    this.saveSettings();
                 } catch (error) {
                     console.warn(error);
                 }
@@ -193,7 +200,7 @@ export default class ReadlaterPlugin extends Plugin {
             name: "Synch Pocket Unread List",
             checkCallback: (checking: boolean) => {
                 if (checking) {
-                    return !!this.settings.pocket.access_token;
+                    return pocketProvider.isAuthorized();
                 }
                 (async () => {
                     await this.synchProvider(
@@ -209,7 +216,7 @@ export default class ReadlaterPlugin extends Plugin {
             name: "Synch Instapaper Unread List",
             checkCallback: (checking: boolean) => {
                 if (checking) {
-                    return !!this.settings.instapaper.token;
+                    return instapaperProvider.isAuthorized();
                 }
                 (async () => {
                     await this.synchProvider(
@@ -218,6 +225,28 @@ export default class ReadlaterPlugin extends Plugin {
                     );
                 })();
 
+            },
+        });
+
+
+        this.addCommand({
+            id: "archive-bookmark",
+            name: "Archive Bookmark on Provider",
+            checkCallback: (checking: boolean) => {
+                const file = this.app.workspace.getActiveFile();
+                if(!file) return false;
+                const mc =this.app.metadataCache.getFileCache(file)
+                const provider = mc?.frontmatter?.readlater?.provider as ReadlaterProvider;
+                const id = mc?.frontmatter?.readlater?.id as string;
+                if((!provider || !id)) return false;
+                const p = providersMap[provider];
+                if(!p.isAuthorized()) return false;
+                if (checking) {
+                    return true;
+                }
+                (async () => {
+                    await p.archiveBookmark(id);
+                })();
             },
         });
     }

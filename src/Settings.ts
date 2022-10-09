@@ -1,9 +1,6 @@
 
 
-export enum ReadlaterProvider {
-    Pocket = "pocket",
-    Instapaper = "instapaper"
-}
+
 
 export enum SynchFrequency {
     Manual = "Manual|",

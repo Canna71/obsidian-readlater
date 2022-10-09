@@ -211,6 +211,9 @@ export const pocketProvider: BookmarksProvider = {
     archiveBookmark: async (id: string) => {
         await archive(id);
     },
+    isAuthorized: ()=>{
+        return !!getReadlaterSettings().pocket.access_token;
+    }
 };
 
 

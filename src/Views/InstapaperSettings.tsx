@@ -56,7 +56,7 @@ export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) =
 
     const onChangeFrequency = React.useCallback(
         (e:React.ChangeEvent<HTMLSelectElement>) => {
-            plugin.settings.pocket.frequency = e.target.value as SynchFrequency;
+            plugin.settings.instapaper.frequency = e.target.value as SynchFrequency;
             plugin.saveSettings();
             update(settings => ({ ...settings }));
 

@@ -1,6 +1,5 @@
 import {
     ProviderSettings,
-    ReadlaterProvider,
     SynchFrequency,
 } from "./../Settings";
 import { BrowserView, BrowserWindow } from "electron";
@@ -22,6 +21,7 @@ import { DOMParser, parseHTML } from "linkedom";
 import path from "path";
 import { getFilesInFolder } from "src/utils";
 import moment from "moment";
+import { ReadlaterProvider } from "./Provider";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const electron = require("electron");
