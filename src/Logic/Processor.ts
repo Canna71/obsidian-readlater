@@ -1,4 +1,4 @@
-import { ProviderSettings, ReadlaterProvider } from './../Settings';
+import { ProviderSettings, ReadlaterProvider } from "./../Settings";
 import { BrowserView, BrowserWindow } from "electron";
 import { getReadlaterSettings } from "src/main";
 import {
@@ -6,6 +6,7 @@ import {
     htmlToMarkdown,
     normalizePath,
     requestUrl,
+    stringifyYaml,
     TFile,
 } from "obsidian";
 
@@ -34,12 +35,12 @@ export type Bookmark = {
 };
 
 export type CreateFileOpts = {
-    unattended?: boolean, 
-    title?:string, 
-    id?:string,
-    provider: string,
-    folder?: string
-}
+    unattended?: boolean;
+    title?: string;
+    id?: string;
+    provider: string;
+    folder?: string;
+};
 
 export default class Processor {
     app: App;
@@ -115,7 +116,11 @@ export default class Processor {
         const [extractedTitle, md] = await this.downloadAsMarkDown(url);
         const title = options?.title || extractedTitle || url;
         const attr = getReadlaterSettings().urlAttribute;
-        const content = `---\n${attr}: "${url}"\n---\n` + md;
+        // const content = `---\n${attr}: "${url}"\n---\n` + md;
+        const metaData: any = {};
+        metaData[attr] = url;
+        // metaData.rea
+        const content = "---\n" + stringifyYaml(metaData) + "---\n" + md;
         const fileName = this.normalizeFileName(title) + ".md";
         let folder = options?.folder || getReadlaterSettings().readLaterFolder;
         if (!folder) {
@@ -308,7 +313,8 @@ export default class Processor {
         // mark as read if specified
         const settings = getReadlaterSettings();
         const providerSettings = settings[provider] as ProviderSettings;
-        const destFolder = providerSettings.folder || settings.readLaterFolder || "/";
+        const destFolder =
+            providerSettings.folder || settings.readLaterFolder || "/";
         const files = getFilesInFolder(this.app, destFolder);
         const urls = new Map<string, boolean>();
         // we determine what we already have
@@ -326,14 +332,14 @@ export default class Processor {
         console.log(toProcess);
         for (const bookmark of toProcess) {
             //TODO: shoule we also pass provider info (i.e. to mark as ready from editor)
-            try{
+            try {
                 // here we should pass also provider, folder
-                this.createFileFromURL(bookmark.url,{
+                this.createFileFromURL(bookmark.url, {
                     unattended: true,
                     provider: provider,
                     folder: destFolder,
                     id: bookmark.id,
-                    title: bookmark.title
+                    title: bookmark.title,
                 });
             } catch (error) {
                 console.warn(error);
