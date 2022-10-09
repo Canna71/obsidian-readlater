@@ -41,7 +41,7 @@ export type Credentials = {
 
 export default class ReadlaterPlugin extends Plugin {
     settings: ReadlaterSettings;
-
+    synching = false;
     event = new EventEmitter();
 
     async onload() {
@@ -70,8 +70,16 @@ export default class ReadlaterPlugin extends Plugin {
 
     private registerSynchInterval() {
         this.registerInterval(window.setInterval(
-            () => {
-                new Processor(this.app).synchAll()
+            async () => {
+                if(!this.synching){
+                    this.synching = true;
+                    try{
+                        await new Processor(this.app).synchAll()
+                    } finally {
+                        this.synching = false;
+                    }
+
+                }
             }
         , this.settings.synchPeriodMS));
     }

@@ -5,6 +5,7 @@ export enum ReadlaterProvider {
 }
 
 export enum SynchFrequency {
+    Manual = "Manual|",
     Hourly = "Hourly",
     Daily = "Daily",
     Weekly = "Weekly",

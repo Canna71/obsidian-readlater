@@ -344,27 +344,23 @@ export default class Processor {
             (bookmark) => !urls.has(bookmark.url)
         );
 
-        const promises = [];
-
-        for (const bookmark of toProcess) {
-            try {
-                // here we should pass also provider, folder
-                const p = this.createFileFromURL(bookmark.url, {
-                    unattended: true,
-                    provider: provider,
-                    folder: destFolder,
-                    id: bookmark.id,
-                    title: bookmark.title,
-                });
-                promises.push(p);
-            } catch (error) {
-                console.warn(error);
-            }
+        try {
+            await Promise.all(
+                toProcess.map((bookmark) =>
+                    this.createFileFromURL(bookmark.url, {
+                        unattended: true,
+                        provider: provider,
+                        folder: destFolder,
+                        id: bookmark.id,
+                        title: bookmark.title,
+                    })
+                )
+            );
+        } catch (error) {
+            console.warn(error);
         }
-
-        await Promise.all(promises);
         return {
-            processed: promises.length,
+            processed: toProcess.length,
             folder: destFolder,
             provider,
         };
@@ -389,7 +385,7 @@ export default class Processor {
                 const lastSynch = moment(synchTime);
                 switch (synchPeriod) {
                     case SynchFrequency.Daily:
-                        return now.diff(lastSynch, "days") > 0; 
+                        return now.diff(lastSynch, "days") > 0;
                     case SynchFrequency.Hourly:
                         return now.diff(lastSynch, "hours") > 0;
                     case SynchFrequency.Monthly:
@@ -398,17 +394,17 @@ export default class Processor {
                         return now.diff(lastSynch, "weeks") > 0;
                     case SynchFrequency.Yearly:
                         return now.diff(lastSynch, "years") > 0;
+                    case SynchFrequency.Manual:
+                        return false;
                     default:
-                        console.warn("Invalid synch attribute " + synchPeriod)
-                    break;
+                        console.warn("Invalid synch attribute " + synchPeriod);
+                        break;
                 }
             }
         });
         // 1665310248866
-        
-        await Promise.all(
-            toProcess.map(file=>this.processFile(file))
-        );
+
+        await Promise.all(toProcess.map((file) => this.processFile(file)));
         console.log(`processed ${toProcess.length} files`);
     }
 }
