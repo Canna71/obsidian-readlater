@@ -5,6 +5,7 @@ import { enroll as enrollInstapaper } from "../Logic/InstapaperProvider";
 import { ProviderSettingsProps } from "./SettingTab";
 import { SynchFrequency } from "src/Settings";
 import { FrequencySelect } from "./FrequencySelect";
+import InstapaperLogo from "../svg/instapaper.svg";
 
 export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) => {
     const instaCfg = plugin.settings.instapaper;
@@ -66,7 +67,7 @@ export const InstapaperSettings = ({ plugin, folders }: ProviderSettingsProps) =
 
     return (
         <>
-            <h3>InstaPaper Integration</h3>
+            <h3><InstapaperLogo />&nbsp; InstaPaper Integration</h3>
             <SettingItem>
                 <SettingsInfo description={desc} name={""} />
                 {status && <SettingsInfo description={status} name={""} />}

@@ -9,7 +9,6 @@ import { enroll as enrollInstapaper } from "../Logic/InstapaperProvider";
 import { PocketSettings } from "./PocketSettings";
 import { InstapaperSettings } from "./InstapaperSettings";
 import { SettingControl, SettingItem, SettingsInfo, Toggle } from "./SettingControls";
-// https://react-select.com/styles
 export class ReadlaterSettingsTab extends PluginSettingTab {
     plugin: ReadlaterPlugin;
     root: Root;

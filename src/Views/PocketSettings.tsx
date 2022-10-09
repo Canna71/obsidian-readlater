@@ -5,6 +5,7 @@ import { SelectObs } from "src/Views/Select";
 import { ProviderSettingsProps } from "./SettingTab";
 import { FrequencySelect } from "./FrequencySelect";
 import { SynchFrequency } from "src/Settings";
+import PocketIcon from "../svg/pocket.svg";
 
 export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
     const pocketCfg = plugin.settings.pocket;
@@ -72,7 +73,7 @@ export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
 
     return (
         <>
-            <h3>Pocket Integration</h3>
+            <h3><PocketIcon />&nbsp; Pocket Integration</h3>
             <SettingItem>
                 <SettingsInfo description={desc} name={""} />
                 <SettingControl>

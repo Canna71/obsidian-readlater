@@ -1,6 +1,7 @@
 import { Bookmark } from './Processor';
 import { requestUrl } from "obsidian";
 import { getReadlaterSettings } from "src/main";
+import moment from 'moment';
 
 // DOCS: https://getpocket.com/developer/docs/authentication
 
@@ -173,4 +174,37 @@ export async function GetBookmarks() : Promise<Bookmark[]> {
         }
     })
     return bookmarks;
+}
+
+export async function archive(itemId: string) : Promise<ListResult> {
+    const pocketCfg = getReadlaterSettings().pocket;
+
+    const headersList = {
+        Accept: "*/*",
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Accept": "application/json",
+    };
+
+    const bodyContent = JSON.stringify({
+        consumer_key: CONSUMER_KEY,
+        access_token: pocketCfg.access_token,
+        actions: [
+            {
+                "action" : "archive",
+                "item_id" : itemId,
+                "time"     : moment().valueOf().toString()
+            }
+        ]
+    });
+
+    const response = await requestUrl({
+        url: "https://getpocket.com/v3/send",
+        method: "POST",
+        body: bodyContent,
+        headers: headersList,
+    });
+
+    const data = response.json;
+    console.log(data);
+    return data;
 }
