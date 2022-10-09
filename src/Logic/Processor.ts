@@ -1,3 +1,4 @@
+import { ProviderSettings, ReadlaterProvider } from './../Settings';
 import { BrowserView, BrowserWindow } from "electron";
 import { getReadlaterSettings } from "src/main";
 import {
@@ -32,6 +33,14 @@ export type Bookmark = {
     url: string;
 };
 
+export type CreateFileOpts = {
+    unattended?: boolean, 
+    title?:string, 
+    id?:string,
+    provider: string,
+    folder?: string
+}
+
 export default class Processor {
     app: App;
     static fileNameRE = /[\\/:]/gm;
@@ -52,7 +61,7 @@ export default class Processor {
         if (!this._win) {
             //@ts-ignore
             this._win = new electron.remote.BrowserWindow({
-                show: true,
+                show: false,
             }) as BrowserWindow;
         }
         return this._win;
@@ -101,17 +110,17 @@ export default class Processor {
         }
     }
 
-    // TODO: check if file with that Url exists
-    async createFileFromURL(url: string, unattended = false, providedTitle?:string, id?:string) {
+    // TODO: store info about bookmark
+    async createFileFromURL(url: string, options?: CreateFileOpts) {
         const [extractedTitle, md] = await this.downloadAsMarkDown(url);
-        const title = providedTitle || extractedTitle || url;
+        const title = options?.title || extractedTitle || url;
         const attr = getReadlaterSettings().urlAttribute;
         const content = `---\n${attr}: "${url}"\n---\n` + md;
         const fileName = this.normalizeFileName(title) + ".md";
-        let folder = getReadlaterSettings().readLaterFolder;
+        let folder = options?.folder || getReadlaterSettings().readLaterFolder;
         if (!folder) {
             folder =
-                (!unattended &&
+                (!options?.unattended &&
                     this.app.workspace.getActiveFile()?.parent.path) ||
                 "/";
         }
@@ -288,19 +297,18 @@ export default class Processor {
 
     processBookmarks(
         bookmarks: Bookmark[],
-        options: { markAsRead: boolean; folder?: string }
+        // options: { markAsRead: boolean; folder?: string }
+        provider: ReadlaterProvider
     ) {
         // TODO:
-        // check which folder to check
-        // chechs what we already have
-        // download only new (?)
         // use title as file name if provided, page title otherwise
         // set metadata in the file:
         // - readlater
         // -     downladed when
         // mark as read if specified
         const settings = getReadlaterSettings();
-        const destFolder = options.folder || settings.readLaterFolder || "/";
+        const providerSettings = settings[provider] as ProviderSettings;
+        const destFolder = providerSettings.folder || settings.readLaterFolder || "/";
         const files = getFilesInFolder(this.app, destFolder);
         const urls = new Map<string, boolean>();
         // we determine what we already have
@@ -319,7 +327,14 @@ export default class Processor {
         for (const bookmark of toProcess) {
             //TODO: shoule we also pass provider info (i.e. to mark as ready from editor)
             try{
-                this.createFileFromURL(bookmark.url,true,bookmark.title, bookmark.id);
+                // here we should pass also provider, folder
+                this.createFileFromURL(bookmark.url,{
+                    unattended: true,
+                    provider: provider,
+                    folder: destFolder,
+                    id: bookmark.id,
+                    title: bookmark.title
+                });
             } catch (error) {
                 console.warn(error);
             }

@@ -1,4 +1,4 @@
-import { DEFAULT_SETTINGS, ReadlaterSettings } from "src/Settings";
+import { DEFAULT_SETTINGS, ReadlaterProvider, ReadlaterSettings } from "src/Settings";
 import { addIcon, MarkdownView, ObsidianProtocolData } from "obsidian";
 
 // import { MathResult } from './Extensions/ResultMarkdownChild';
@@ -138,7 +138,7 @@ export default class ReadlaterPlugin extends Plugin {
                 }
                 (async ()=>{
                     const bookmarks = await getPocketBookmarks();
-                    new Processor(this.app).processBookmarks(bookmarks, this.settings.pocket);
+                    new Processor(this.app).processBookmarks(bookmarks, ReadlaterProvider.Pocket);
                 })();
                 
             },
@@ -153,7 +153,7 @@ export default class ReadlaterPlugin extends Plugin {
                 }
                 (async ()=>{
                     const bookmarks = await getInstapaperUnread();
-                    new Processor(this.app).processBookmarks(bookmarks, this.settings.instapaper);
+                    new Processor(this.app).processBookmarks(bookmarks, ReadlaterProvider.Instapaper);
 
                 })();
                

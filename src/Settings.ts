@@ -1,4 +1,14 @@
 
+export enum ReadlaterProvider {
+    Pocket = "pocket",
+    Instapaper = "instapaper"
+}
+
+export interface ProviderSettings {
+    folder?: string;
+    markAsRead: boolean;
+}
+
 export interface ReadlaterSettings {
     addRibbonIcon: boolean;
     showAtStartup: boolean;
