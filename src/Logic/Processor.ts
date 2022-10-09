@@ -1,4 +1,8 @@
-import { ProviderSettings, ReadlaterProvider } from "./../Settings";
+import {
+    ProviderSettings,
+    ReadlaterProvider,
+    SynchFrequency,
+} from "./../Settings";
 import { BrowserView, BrowserWindow } from "electron";
 import { getReadlaterSettings } from "src/main";
 import {
@@ -94,10 +98,15 @@ export default class Processor {
         if (syncUrl) {
             const [title, md] = await this.downloadAsMarkDown(syncUrl);
             const content: string = await this.app.vault.cachedRead(file);
+            const frontMatter: any =
+                this.app.metadataCache.getFileCache(file)?.frontmatter || {};
+            frontMatter.position = undefined;
+            frontMatter.readlater = {
+                ...frontMatter.readlater,
+                synchtime: moment().valueOf(),
+            };
             const newContent =
-                content.substring(0, frontMatter.position.end.offset) +
-                "\n" +
-                md;
+                "---\n" + stringifyYaml(frontMatter) + "---\n" + md;
             app.vault.modify(file, newContent);
 
             app.vault.rename(
@@ -112,20 +121,19 @@ export default class Processor {
         }
     }
 
-    // TODO: store info about bookmark
     async createFileFromURL(url: string, options?: CreateFileOpts) {
         const [extractedTitle, md] = await this.downloadAsMarkDown(url);
         const title = options?.title || extractedTitle || url;
         const attr = getReadlaterSettings().urlAttribute;
         // const content = `---\n${attr}: "${url}"\n---\n` + md;
-        const metaData: any = {};
-        metaData[attr] = url;
-        metaData.readlater = {
-            id: options?.id, 
-            provider: options?.provider, 
-            synchtime: moment().format("YYYY-MM-DD")
+        const frontMatter: any = {};
+        frontMatter[attr] = url;
+        frontMatter.readlater = {
+            id: options?.id,
+            provider: options?.provider,
+            synchtime: moment().valueOf(),
         };
-        const content = "---\n" + stringifyYaml(metaData) + "---\n" + md;
+        const content = "---\n" + stringifyYaml(frontMatter) + "---\n" + md;
         const fileName = this.normalizeFileName(title) + ".md";
         let folder = options?.folder || getReadlaterSettings().readLaterFolder;
         if (!folder) {
@@ -139,7 +147,7 @@ export default class Processor {
         const usablepath = await this.checkForUsablePath(fullPath);
         const file = await this.app.vault.create(usablepath, content);
         const leaf = this.app.workspace.getLeaf(false);
-        if(!options?.unattended){
+        if (!options?.unattended) {
             await leaf.openFile(file);
         }
     }
@@ -335,8 +343,6 @@ export default class Processor {
         const toProcess = bookmarks.filter(
             (bookmark) => !urls.has(bookmark.url)
         );
-        console.log(bookmarks);
-        console.log(toProcess);
 
         const promises = [];
 
@@ -360,8 +366,50 @@ export default class Processor {
         return {
             processed: promises.length,
             folder: destFolder,
-            provider
-        }
+            provider,
+        };
+    }
+
+    async synchAll() {
+        const attr = getReadlaterSettings().urlAttribute;
+
+        const files = this.app.vault.getMarkdownFiles();
+        const toProcess = files.filter((file) => {
+            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+
+            if (fm?.[attr]) {
+                // determine if we should synch this
+                const synchTime: number | undefined = fm.readlater?.synchtime;
+                const synchPeriod = fm.readlater?.synch as SynchFrequency;
+                // no synch attribute, we do not synch it unattendedly
+                if (!synchPeriod) return false;
+                // we have a synch attribute but it was never synched, we process it
+                if (!synchTime) return true;
+                const now = moment();
+                const lastSynch = moment(synchTime);
+                switch (synchPeriod) {
+                    case SynchFrequency.Daily:
+                        return now.diff(lastSynch, "days") > 0; 
+                    case SynchFrequency.Hourly:
+                        return now.diff(lastSynch, "hours") > 0;
+                    case SynchFrequency.Monthly:
+                        return now.diff(lastSynch, "month") > 0;
+                    case SynchFrequency.Weekly:
+                        return now.diff(lastSynch, "weeks") > 0;
+                    case SynchFrequency.Yearly:
+                        return now.diff(lastSynch, "years") > 0;
+                    default:
+                        console.warn("Invalid synch attribute " + synchPeriod)
+                    break;
+                }
+            }
+        });
+        // 1665310248866
+        
+        await Promise.all(
+            toProcess.map(file=>this.processFile(file))
+        );
+        console.log(`processed ${toProcess.length} files`);
     }
 }
 

@@ -62,6 +62,18 @@ export default class ReadlaterPlugin extends Plugin {
         this.registerEvents();
 
         this.addSettingTab(new ReadlaterSettingsTab(this.app, this));
+
+        // register an interval for synching pages
+        this.registerSynchInterval();
+
+    }
+
+    private registerSynchInterval() {
+        this.registerInterval(window.setInterval(
+            () => {
+                new Processor(this.app).synchAll()
+            }
+        , this.settings.synchPeriodMS));
     }
 
     private registerProtocolHandlers() {
@@ -157,6 +169,8 @@ export default class ReadlaterPlugin extends Plugin {
                 // TODO:
             },
         });
+
+        
     }
 
     private async synchProvider(fn: ()=>Promise<Bookmark[]>, provider:ReadlaterProvider) {

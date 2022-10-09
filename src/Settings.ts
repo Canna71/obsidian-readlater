@@ -4,6 +4,14 @@ export enum ReadlaterProvider {
     Instapaper = "instapaper"
 }
 
+export enum SynchFrequency {
+    Hourly = "Hourly",
+    Daily = "Daily",
+    Weekly = "Weekly",
+    Monthly = "Monthly",
+    Yearly = "Yearly"
+}
+
 export interface ProviderSettings {
     folder?: string;
     markAsRead: boolean;
@@ -29,6 +37,7 @@ export interface ReadlaterSettings {
         folder?: string;
     }
     domainsForHeadless: string[];
+    synchPeriodMS: number;
 }   
 
 export const DEFAULT_SETTINGS: ReadlaterSettings = {
@@ -45,7 +54,8 @@ export const DEFAULT_SETTINGS: ReadlaterSettings = {
     domainsForHeadless: [
         "medium.com",
         "msn.com"
-    ]
+    ],
+    synchPeriodMS: 1000*60*15 // check every 15 mins, but at most we have hourly frequency
 
 }
 
