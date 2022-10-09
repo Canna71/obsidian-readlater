@@ -22,12 +22,12 @@ import { URL } from "url";
 import { threadId } from "worker_threads";
 import {
     authorize,
-    GetBookmarks as getPocketBookmarks,
+    pocketProvider,
     POCKET_ACTION,
 } from "./Logic/PocketProvider";
 import { runInThisContext } from "vm";
 import { CredentialsModal } from "./CredentialsModal";
-import { getUnreadArticles as getInstapaperUnread } from "./Logic/InstapaperProvider";
+import { instapaperProvider } from "./Logic/InstapaperProvider";
 import { EventEmitter } from "events";
 import moment from "moment";
 // import { EventEmitter } from "stream";
@@ -86,7 +86,7 @@ export default class ReadlaterPlugin extends Plugin {
                         await this.synchAllProviders();
                     } finally {
                         this.synching = false;
-                    }
+                    } 
                 }
             }, this.settings.synchPeriodMS)
         );
@@ -102,7 +102,7 @@ export default class ReadlaterPlugin extends Plugin {
             ) {
                 try {
                     await this.synchProvider(
-                        getPocketBookmarks,
+                        pocketProvider.getBookmarks,
                         ReadlaterProvider.Pocket
                     );
                     this.settings.pocket.lastSynch = moment().valueOf();
@@ -120,7 +120,7 @@ export default class ReadlaterPlugin extends Plugin {
             ) {
                 try {
                     await this.synchProvider(
-                        getInstapaperUnread,
+                        instapaperProvider.getBookmarks,
                         ReadlaterProvider.Instapaper
                     );
                     this.settings.instapaper.lastSynch = moment().valueOf();
@@ -146,7 +146,6 @@ export default class ReadlaterPlugin extends Plugin {
         this.app.workspace.on(
             "active-leaf-change",
             (leaf: WorkspaceLeaf | null) => {
-                // console.log("active-leaf-change", leaf);
                 if (leaf?.view instanceof MarkdownView) {
                     // @ts-expect-error, not typed
                     const editorView = leaf.view.editor.cm as EditorView;
@@ -155,13 +154,6 @@ export default class ReadlaterPlugin extends Plugin {
             this
         );
 
-        this.app.workspace.on(
-            "codemirror",
-            (cm: CodeMirror.Editor) => {
-                console.log("codemirror", cm);
-            },
-            this
-        );
 
         this.app.workspace.onLayoutReady(() => {
             if (this.settings.showAtStartup) {
@@ -205,7 +197,7 @@ export default class ReadlaterPlugin extends Plugin {
                 }
                 (async () => {
                     await this.synchProvider(
-                        getPocketBookmarks,
+                        pocketProvider.getBookmarks,
                         ReadlaterProvider.Pocket
                     );
                 })();
@@ -221,12 +213,11 @@ export default class ReadlaterPlugin extends Plugin {
                 }
                 (async () => {
                     await this.synchProvider(
-                        getInstapaperUnread,
+                        instapaperProvider.getBookmarks,
                         ReadlaterProvider.Instapaper
                     );
                 })();
 
-                // TODO:
             },
         });
     }

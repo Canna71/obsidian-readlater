@@ -82,7 +82,6 @@ export default class Processor {
         const html = await frame.executeJavaScript(
             "document.documentElement.outerHTML"
         );
-        console.log(html);
         const [_, article] = this.extractData(html as string);
         const md = htmlToMarkdown(article);
         return [title, md];
@@ -386,7 +385,6 @@ export default class Processor {
         // 1665310248866
 
         await Promise.all(toProcess.map((file) => this.processFile(file)));
-        console.log(`processed ${toProcess.length} files`);
     }
 }
 

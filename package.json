@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-readlater",
 	"version": "1.0.0",
-	"description": "TODO:",
+	"description": "Synch web pages to markdown and integrate with read-it-later apps (Pocket, Instapaper)",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",

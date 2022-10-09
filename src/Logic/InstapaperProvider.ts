@@ -1,5 +1,5 @@
-import { Bookmark } from './Processor';
-import  ReadlaterPlugin, { getReadlaterSettings }  from "src/main";
+import { Bookmark } from "./Processor";
+import ReadlaterPlugin, { getReadlaterSettings } from "src/main";
 // https://oauth.net/core/1.0a/
 // https://www.instapaper.com/api
 // https://www.npmjs.com/package/oauth-signature
@@ -13,6 +13,7 @@ import crypto from "crypto";
 import OAuth from "oauth-1.0a";
 import { requestUrl } from "obsidian";
 import { URLSearchParams } from "url";
+import { BookmarksProvider } from "./Provider";
 
 const CONSUMER_KEY = "d9199656c5cf4e1ebd6021e9cc73eef4";
 const CONSUMER_SECRET = "90e4d04cf8a3476fa9bcc7a7efa704bf";
@@ -35,7 +36,6 @@ const sample =
     "oauth_token_secret=26d01c2595674eb0a282fe60c8a95712&oauth_token=d68c56d46f874eafa6d59d6a6b6cfd03";
 
 export async function enroll(plugin: ReadlaterPlugin) {
-    
     const { oauth_token, oauth_token_secret } = await getAccessToken(plugin);
     plugin.settings.instapaper.token = oauth_token;
     plugin.settings.instapaper.secret = oauth_token_secret;
@@ -46,15 +46,16 @@ export async function enroll(plugin: ReadlaterPlugin) {
         plugin.settings.instapaper.user_id = verify.user_id;
         plugin.saveSettings();
     }
-} 
+}
 
 export type AccessTokenResponse = {
     oauth_token: string;
     oauth_token_secret: string;
 };
 
-export async function getAccessToken(plugin: ReadlaterPlugin): Promise<AccessTokenResponse> {
-
+export async function getAccessToken(
+    plugin: ReadlaterPlugin
+): Promise<AccessTokenResponse> {
     const credentials = await plugin.askCredentials();
 
     const data = {
@@ -87,7 +88,6 @@ export async function getAccessToken(plugin: ReadlaterPlugin): Promise<AccessTok
     // }
 }
 
-
 export type VerifyCredentialsResponse = {
     subscription_is_active: string;
     type: string;
@@ -95,20 +95,15 @@ export type VerifyCredentialsResponse = {
     username: string;
 };
 
-export async function verifyCredentials(
-    
-): Promise<VerifyCredentialsResponse> {
-    const {token, secret} = getReadlaterSettings().instapaper;
-    if(!token || !secret) throw new Error("Not authorized with Instapaper");
+export async function verifyCredentials(): Promise<VerifyCredentialsResponse> {
+    const { token, secret } = getReadlaterSettings().instapaper;
+    if (!token || !secret) throw new Error("Not authorized with Instapaper");
 
     const data = {
         url: `https://www.instapaper.com/api/1/account/verify_credentials`,
         method: `POST`,
     };
-    const au = oauth.authorize(
-        { ...data },
-        { key: token, secret: secret }
-    );
+    const au = oauth.authorize({ ...data }, { key: token, secret: secret });
     const req = {
         url: data.url,
         method: data.method,
@@ -122,63 +117,59 @@ export async function verifyCredentials(
 }
 
 export type InstaBookmark = {
-    bookmark_id: number
-    description: string
-    hash: string
-    private_source: string
-    progress: number
-    progress_timestamp: number
-    starred: string
-    time: number
-    title: string
-    type: string
-    url: string
+    bookmark_id: number;
+    description: string;
+    hash: string;
+    private_source: string;
+    progress: number;
+    progress_timestamp: number;
+    starred: string;
+    time: number;
+    title: string;
+    type: string;
+    url: string;
 };
 
-export async function getUnreadArticles ()  : Promise<Bookmark[]>{
-        const {token, secret} = getReadlaterSettings().instapaper;
-        if(!token || !secret) throw new Error("Not authorized with Instapaper");
-        const data = {
-            url: `https://www.instapaper.com/api/1/bookmarks/list`,
-            method: `POST`,
-        };
-        const au = oauth.authorize(
-            { ...data },
-            { key: token, secret: secret }
-        );
-        const req = {
-            url: data.url,
-            method: data.method,
-            // body: new URLSearchParams(data.data).toString(),
-            headers: oauth.toHeader(au) as any,
-            contentType: "application/x-www-form-urlencoded",
-            throw: false,
-        };
-        const response = await requestUrl(req);
-        const instaBookmarks:InstaBookmark[] =  response.json.filter((item:any) => item.type === "bookmark");
+async function getUnreadArticles(): Promise<Bookmark[]> {
+    const { token, secret } = getReadlaterSettings().instapaper;
+    if (!token || !secret) throw new Error("Not authorized with Instapaper");
+    const data = {
+        url: `https://www.instapaper.com/api/1/bookmarks/list`,
+        method: `POST`,
+    };
+    const au = oauth.authorize({ ...data }, { key: token, secret: secret });
+    const req = {
+        url: data.url,
+        method: data.method,
+        // body: new URLSearchParams(data.data).toString(),
+        headers: oauth.toHeader(au) as any,
+        contentType: "application/x-www-form-urlencoded",
+        throw: false,
+    };
+    const response = await requestUrl(req);
+    const instaBookmarks: InstaBookmark[] = response.json.filter(
+        (item: any) => item.type === "bookmark"
+    );
 
-        const bookmarks = instaBookmarks.map(ib=>({
-            id: String(ib.bookmark_id),
-            title: ib.title,
-            url: ib.url
-        }));
-        return bookmarks;
+    const bookmarks = instaBookmarks.map((ib) => ({
+        id: String(ib.bookmark_id),
+        title: ib.title,
+        url: ib.url,
+    }));
+    return bookmarks;
 }
 
-export async function archiveBookmark (bookmark_id:number)  : Promise<InstaBookmark>{
-    const {token, secret} = getReadlaterSettings().instapaper;
-    if(!token || !secret) throw new Error("Not authorized with Instapaper");
+async function archiveBookmark(bookmark_id: number): Promise<InstaBookmark> {
+    const { token, secret } = getReadlaterSettings().instapaper;
+    if (!token || !secret) throw new Error("Not authorized with Instapaper");
     const data = {
         url: `https://www.instapaper.com/api/1/bookmarks/archive`,
         method: `POST`,
         data: {
-            bookmark_id: bookmark_id.toString()
-        }
+            bookmark_id: bookmark_id.toString(),
+        },
     };
-    const au = oauth.authorize(
-        { ...data },
-        { key: token, secret: secret }
-    );
+    const au = oauth.authorize({ ...data }, { key: token, secret: secret });
     const req = {
         url: data.url,
         method: data.method,
@@ -188,5 +179,12 @@ export async function archiveBookmark (bookmark_id:number)  : Promise<InstaBookm
         throw: false,
     };
     const response = await requestUrl(req);
-    return response.json.filter((item:any) => item.type === "bookmark");
+    return response.json.filter((item: any) => item.type === "bookmark");
 }
+
+export const instapaperProvider: BookmarksProvider = {
+    getBookmarks: getUnreadArticles,
+    archiveBookmark: async (id: string) => {
+        await archiveBookmark(Number(id));
+    },
+};

@@ -48,6 +48,7 @@ export interface ReadlaterSettings {
     synchPeriodMS: number;
 }   
 
+
 export const DEFAULT_SETTINGS: ReadlaterSettings = {
     addRibbonIcon: true,
     showAtStartup: true,
@@ -66,6 +67,5 @@ export const DEFAULT_SETTINGS: ReadlaterSettings = {
         "msn.com"
     ],
     synchPeriodMS: 1000*60*15 // check every 15 mins, but at most we have hourly frequency
-
 }
 

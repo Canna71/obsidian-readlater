@@ -16,7 +16,6 @@ export class ReadlaterSettingsTab extends PluginSettingTab {
     constructor(app: App, plugin: ReadlaterPlugin) {
         super(app, plugin);
         this.plugin = plugin;
-        console.log("Readlater Setings constructor");
         const { containerEl } = this;
 
         this.root = createRoot(containerEl);

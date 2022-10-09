@@ -62,7 +62,6 @@ export const PocketSettings = ({ plugin, folders }: ProviderSettingsProps) => {
 
     const onChangeFrequency = React.useCallback(
         (e:React.ChangeEvent<HTMLSelectElement>) => {
-            console.log(e.target.value);
             plugin.settings.pocket.frequency = e.target.value as SynchFrequency;
             plugin.saveSettings();
             onUpdate();

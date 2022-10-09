@@ -1,7 +1,8 @@
-import { Bookmark } from './Processor';
+import { Bookmark } from "./Processor";
 import { requestUrl } from "obsidian";
 import { getReadlaterSettings } from "src/main";
-import moment from 'moment';
+import moment from "moment";
+import { BookmarksProvider } from "./Provider";
 
 // DOCS: https://getpocket.com/developer/docs/authentication
 
@@ -9,7 +10,6 @@ import moment from 'moment';
 const electron = require("electron");
 
 export const POCKET_ACTION = "readlater-pocket";
-
 
 const CONSUMER_KEY = "103949-5250a92d096442648cc99a6";
 
@@ -129,7 +129,6 @@ export async function request(): Promise<RequestResponse> {
     });
 
     const { json } = response;
-    console.log(json);
     return json;
 }
 
@@ -137,7 +136,7 @@ export function getAuthorizeUrl(requestToken: string, redirectUrl: string) {
     return `https://getpocket.com/auth/authorize?request_token=${requestToken}&redirect_uri=${redirectUrl}`;
 }
 
-async function getUnreadList() : Promise<ListResult> {
+async function getUnreadList(): Promise<ListResult> {
     const pocketCfg = getReadlaterSettings().pocket;
 
     const headersList = {
@@ -159,24 +158,23 @@ async function getUnreadList() : Promise<ListResult> {
     });
 
     const data = response.json;
-    console.log(data);
     return data;
 }
 
-export async function GetBookmarks() : Promise<Bookmark[]> {
-    const {list} = await getUnreadList();
-    const bookmarks = Object.keys(list).map(key=>{
+async function GetBookmarks(): Promise<Bookmark[]> {
+    const { list } = await getUnreadList();
+    const bookmarks = Object.keys(list).map((key) => {
         const item = list[key];
         return {
             id: item.item_id,
             url: item.resolved_url,
-            title: item.given_title
-        }
-    })
+            title: item.given_title,
+        };
+    });
     return bookmarks;
 }
 
-export async function archive(itemId: string) : Promise<ListResult> {
+async function archive(itemId: string): Promise<ListResult> {
     const pocketCfg = getReadlaterSettings().pocket;
 
     const headersList = {
@@ -190,11 +188,11 @@ export async function archive(itemId: string) : Promise<ListResult> {
         access_token: pocketCfg.access_token,
         actions: [
             {
-                "action" : "archive",
-                "item_id" : itemId,
-                "time"     : moment().valueOf().toString()
-            }
-        ]
+                action: "archive",
+                item_id: itemId,
+                time: moment().valueOf().toString(),
+            },
+        ],
     });
 
     const response = await requestUrl({
@@ -205,6 +203,14 @@ export async function archive(itemId: string) : Promise<ListResult> {
     });
 
     const data = response.json;
-    console.log(data);
     return data;
 }
+
+export const pocketProvider: BookmarksProvider = {
+    getBookmarks: GetBookmarks,
+    archiveBookmark: async (id: string) => {
+        await archive(id);
+    },
+};
+
+

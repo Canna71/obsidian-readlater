@@ -78,11 +78,7 @@ export class ReadlaterView extends ItemView {
         await loadMathJax();
         await finishRenderMath();
         this.render();
-        // const e = nerdamer('x^2+2*(cos(x)+x*x)');
-        // const latex = e.toTeX();
-        // console.log(latex);
-        // const mathEl = renderMath(latex, true);
-        // contentEl.appendChild(mathEl);
+
     }
 
     async onClose() {

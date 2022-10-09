@@ -36,7 +36,6 @@ export const SelectObs = ({options, placeholder, value, onChange, onInputChange}
 const customStyles = {
 	option: (provided: any, state: any) => {
 
-		// if(state.label === "/") console.log(state);
 
 		return {
 			...provided,
