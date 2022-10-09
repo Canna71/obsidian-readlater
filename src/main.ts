@@ -1,5 +1,5 @@
 import { DEFAULT_SETTINGS, ReadlaterProvider, ReadlaterSettings } from "src/Settings";
-import { addIcon, MarkdownView, ObsidianProtocolData } from "obsidian";
+import { addIcon, MarkdownView, Notice, ObsidianProtocolData } from "obsidian";
 
 // import { MathResult } from './Extensions/ResultMarkdownChild';
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -13,7 +13,7 @@ import {
     WorkspaceLeaf,
 } from "obsidian";
 import { ReadlaterSettingsTab } from "src/Views/SettingTab";
-import Processor from "./Logic/Processor";
+import Processor, { Bookmark } from "./Logic/Processor";
 import { URL } from "url";
 import { threadId } from "worker_threads";
 import { authorize, GetBookmarks as getPocketBookmarks, POCKET_ACTION } from "./Logic/PocketProvider";
@@ -137,8 +137,7 @@ export default class ReadlaterPlugin extends Plugin {
                     return !!this.settings.pocket.access_token;
                 }
                 (async ()=>{
-                    const bookmarks = await getPocketBookmarks();
-                    new Processor(this.app).processBookmarks(bookmarks, ReadlaterProvider.Pocket);
+                    await this.synchProvider(getPocketBookmarks, ReadlaterProvider.Pocket);
                 })();
                 
             },
@@ -152,14 +151,21 @@ export default class ReadlaterPlugin extends Plugin {
                     return !!this.settings.instapaper.token
                 }
                 (async ()=>{
-                    const bookmarks = await getInstapaperUnread();
-                    new Processor(this.app).processBookmarks(bookmarks, ReadlaterProvider.Instapaper);
-
+                    await this.synchProvider(getInstapaperUnread, ReadlaterProvider.Instapaper);
                 })();
                
                 // TODO:
             },
         });
+    }
+
+    private async synchProvider(fn: ()=>Promise<Bookmark[]>, provider:ReadlaterProvider) {
+        const bookmarks = await fn();
+        const res = await new Processor(this.app).processBookmarks(bookmarks, provider);
+        const message = res.processed ?
+            `Readlater synched ${res.provider}, downloaded ${res.processed} articles and saved into ${res.folder}`
+            : `Readlater found no new article to save`;
+        new Notice(message);
     }
 
     onunload() {

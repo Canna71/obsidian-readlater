@@ -17,6 +17,7 @@ import { URL } from "url";
 import { DOMParser, parseHTML } from "linkedom";
 import path from "path";
 import { getFilesInFolder } from "src/utils";
+import moment from "moment";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const electron = require("electron");
@@ -119,7 +120,11 @@ export default class Processor {
         // const content = `---\n${attr}: "${url}"\n---\n` + md;
         const metaData: any = {};
         metaData[attr] = url;
-        // metaData.rea
+        metaData.readlater = {
+            id: options?.id, 
+            provider: options?.provider, 
+            synchtime: moment().format("YYYY-MM-DD")
+        };
         const content = "---\n" + stringifyYaml(metaData) + "---\n" + md;
         const fileName = this.normalizeFileName(title) + ".md";
         let folder = options?.folder || getReadlaterSettings().readLaterFolder;
@@ -134,7 +139,9 @@ export default class Processor {
         const usablepath = await this.checkForUsablePath(fullPath);
         const file = await this.app.vault.create(usablepath, content);
         const leaf = this.app.workspace.getLeaf(false);
-        await leaf.openFile(file);
+        if(!options?.unattended){
+            await leaf.openFile(file);
+        }
     }
 
     private async checkForUsablePath(fullPath: string) {
@@ -300,7 +307,7 @@ export default class Processor {
         return result;
     }
 
-    processBookmarks(
+    async processBookmarks(
         bookmarks: Bookmark[],
         // options: { markAsRead: boolean; folder?: string }
         provider: ReadlaterProvider
@@ -330,20 +337,30 @@ export default class Processor {
         );
         console.log(bookmarks);
         console.log(toProcess);
+
+        const promises = [];
+
         for (const bookmark of toProcess) {
-            //TODO: shoule we also pass provider info (i.e. to mark as ready from editor)
             try {
                 // here we should pass also provider, folder
-                this.createFileFromURL(bookmark.url, {
+                const p = this.createFileFromURL(bookmark.url, {
                     unattended: true,
                     provider: provider,
                     folder: destFolder,
                     id: bookmark.id,
                     title: bookmark.title,
                 });
+                promises.push(p);
             } catch (error) {
                 console.warn(error);
             }
+        }
+
+        await Promise.all(promises);
+        return {
+            processed: promises.length,
+            folder: destFolder,
+            provider
         }
     }
 }
