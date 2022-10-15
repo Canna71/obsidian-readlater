@@ -58,7 +58,7 @@ const SettingsComponent = ({ folders, plugin, app }: {
 
     const onChange = React.useCallback(() => {
         plugin.saveSettings();
-        update(settings => ({ ...settings }));
+        update(settings => ({ ...plugin.settings }));
     }, [plugin]);
 
     const onOpenDomainModal = useCallback(
@@ -84,7 +84,19 @@ const SettingsComponent = ({ folders, plugin, app }: {
                     <Toggle
                         checked={settings.addRibbonIcon}
                         onChange={() => {
-                            settings.addRibbonIcon = !settings.addRibbonIcon;
+                            plugin.settings.addRibbonIcon = !plugin.settings.addRibbonIcon;
+                            onChange();
+                        }} />
+                </SettingControl>
+            </SettingItem>
+            <SettingItem>
+                <SettingsInfo name="URL YAML Attribute" 
+                description="The YAML attribute to use to read and store the URL to fetch and synch" />
+                <SettingControl>
+                    <input
+                        value={settings.urlAttribute}
+                        onChange={(e:React.ChangeEvent<HTMLInputElement>) => {
+                            plugin.settings.urlAttribute = e.target.value;
                             onChange();
                         }} />
                 </SettingControl>
