@@ -10,7 +10,6 @@ Plugin for keeping and tracking offsite version of web pages
 
 Use a [bookmarklet](https://canna71.github.io/obsidian-readlater/)
 Use the command `Save URL from Clipboard`
-Use the command `Save URL from Selection` (WIP)
 Set the `url` attribute in the frontmatter and use the command `Synch current page`
 
 ## Integrate with read-it-later Services
