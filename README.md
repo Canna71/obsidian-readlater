@@ -6,6 +6,9 @@ Plugin for keeping and tracking offsite version of web pages
 - integrate with read-it-later services like [Pocket](https://getpocket.com) and [Instapaper](https://www.instapaper.com)
 - Map a note to a web page and keep it in synch
 
+## Note
+The current version requires that a top level `Read Later` folder is created. This will be made configurable in the next release.
+
 ## Download or update a page to markdown 
 
 Use a [bookmarklet](https://canna71.github.io/obsidian-readlater/)
@@ -39,4 +42,6 @@ readlater:
 ```
 
 `synch` attribute can take the following values: `Manual` (default), `Hourly`, `Daily`, `Weekly`, `Monthly`, `Yearly`
+
+
 
