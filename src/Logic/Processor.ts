@@ -134,7 +134,7 @@ export default class Processor {
         };
         const content = "---\n" + stringifyYaml(frontMatter) + "---\n" + md;
         const fileName = this.normalizeFileName(title) + ".md";
-        let folder = options?.folder || getReadlaterSettings().readLaterFolder;
+        let folder = options?.folder || getReadlaterSettings().readLaterFolder || "/";
         if (!folder) {
             folder =
                 (!options?.unattended &&

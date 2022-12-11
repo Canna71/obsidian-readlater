@@ -50,7 +50,7 @@ export const DEFAULT_SETTINGS: ReadlaterSettings = {
     addRibbonIcon: true,
     showAtStartup: true,
     urlAttribute: "url",
-    readLaterFolder: "Read Later",
+    readLaterFolder: "",
     pocket: {
         markAsRead: false,
         frequency: SynchFrequency.Manual
