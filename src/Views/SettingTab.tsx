@@ -11,6 +11,7 @@ import { InstapaperSettings } from "./InstapaperSettings";
 import { Info, SettingControl, SettingDescription, SettingItem, SettingName, SettingsInfo, Toggle } from "./SettingControls";
 import { DomainsModal } from "./DomainsModal";
 import { useCallback } from "react";
+import { SelectObs } from "./Select";
 export class ReadlaterSettingsTab extends PluginSettingTab {
     plugin: ReadlaterPlugin;
     root: Root;
@@ -73,6 +74,20 @@ const SettingsComponent = ({ folders, plugin, app }: {
       },
       [],
     )
+
+    const onFolderChange = React.useCallback((newValue: any, actionMeta: any) => {
+        if (actionMeta.action === "select-option") {
+            plugin.settings.readLaterFolder = newValue.value;
+            plugin.saveSettings();
+            update(settings => ({ ...settings }));
+
+        } else if (actionMeta.action === "clear") {
+            plugin.settings.readLaterFolder = "";
+            plugin.saveSettings();
+            update(settings => ({ ...settings }));
+        }
+
+    }, [plugin, update]);
     
 
     return (
@@ -103,6 +118,24 @@ const SettingsComponent = ({ folders, plugin, app }: {
                 </Info>
                 <SettingControl>
                     <button onClick={onOpenDomainModal}>Manage</button>
+                </SettingControl>
+            </SettingItem>
+
+            <SettingItem>
+                <Info>
+                    <SettingName>Read Later Folder</SettingName>
+                    <SettingDescription>
+                        URLs from clipboard and from bookmarklet are saved to this folder.
+                    </SettingDescription>
+                </Info>
+                <SettingControl>
+                    <SelectObs
+                        options={folders}
+                        value={plugin.settings.readLaterFolder || ""}
+                        onChange={onFolderChange}
+                        placeholder="Select a folder..."
+
+                    />
                 </SettingControl>
             </SettingItem>
 
