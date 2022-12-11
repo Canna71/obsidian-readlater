@@ -40,5 +40,8 @@ readlater:
 
 `synch` attribute can take the following values: `Manual` (default), `Hourly`, `Daily`, `Weekly`, `Monthly`, `Yearly`
 
+## Hints
+This plugin works quite well to synch with shared whiteboards like [Arc browser](https://arc.net/)'s *easel*. 
 
+It is also quite good for reading offline from sites like [Medium](https://medium.com/)
 
