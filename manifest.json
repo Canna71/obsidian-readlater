@@ -1,10 +1,10 @@
 {
 	"id": "obsidian-readlater",
 	"name": "Read Later",
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"minAppVersion": "0.15.0",
 	"description": "Synch web pages to markdown and integrate with read-it-later apps (Pocket, Instapaper)",
 	"author": "Gabriele Cannata",
 	"authorUrl": "https://github.com/Canna71",
-	"isDesktopOnly": false
+	"isDesktopOnly": true
 }
