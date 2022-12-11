@@ -78,17 +78,7 @@ const SettingsComponent = ({ folders, plugin, app }: {
     return (
         <>
             <h2>Read Later Settings</h2>
-            <SettingItem>
-                <SettingsInfo name="Add Ribbon Icon" description="Adds an icon to the ribbon to add URL" />
-                <SettingControl>
-                    <Toggle
-                        checked={settings.addRibbonIcon}
-                        onChange={() => {
-                            plugin.settings.addRibbonIcon = !plugin.settings.addRibbonIcon;
-                            onChange();
-                        }} />
-                </SettingControl>
-            </SettingItem>
+
             <SettingItem>
                 <SettingsInfo name="URL YAML Attribute" 
                 description="The YAML attribute to use to read and store the URL to fetch and synch" />
